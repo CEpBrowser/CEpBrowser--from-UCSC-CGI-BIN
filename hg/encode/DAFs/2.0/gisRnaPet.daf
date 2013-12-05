@@ -1,0 +1,46 @@
+# Data Agreement File for PET Ditag project $Revision: 1.7 $
+
+# This file specifies the data agreement between your lab and 
+# the DCC.  It should not be changed unilaterally.
+
+# The header for the associated .ddf should look like this
+# files   view    cell    localization    rnaExtract	replicate
+
+dafVersion        2.0
+
+# Lab and general info
+grant             Gingeras
+lab               GIS
+dataType          RnaPet
+compositeSuffix   GisRnaPet
+group             expression
+variables         cell, localization, rnaExtract
+assembly          hg19
+validationSettings validateFiles.bam:mmCheckOneInN=10000,mismatches=3,mmPerPair
+noAutoCreate     yes
+
+
+# Track/view definition
+view             PlusRawSig
+longLabelPrefix  GIS RNA PET Raw Signal (plus strand)
+type             bigWig
+hasReplicates    yes
+required         no
+
+view             MinusRawSig
+longLabelPrefix  GIS RNA PET Raw Signal (minus strand)
+type             bigWig
+hasReplicates    yes
+required         no
+
+view             Alignments
+longLabelPrefix  GIS RNA PET Alignments
+type             bam
+hasReplicates    yes
+required         no
+
+view             Clusters
+longLabelPrefix  GIS RNA PET Clusters
+type             bed 12
+hasReplicates    yes
+required         no
