@@ -191,6 +191,8 @@ puts(
     "" "\n"
     "<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%\">" "\n");
 
+#ifdef PRIVATE_CGI
+
 if (withLogo)
     {
     puts("<TR><TH COLSPAN=1 ALIGN=\"left\">");
@@ -436,6 +438,12 @@ puts("&nbsp;</font></TD>" "\n"
      "</TD></TR>	" "\n"
      "" "\n"
      );
+
+#else	// dummy code for public CGI
+if(isGisaid) {
+} else if (isGsid) {
+}
+#endif	//def PRIVATE_CGI
 
 if(!skipSectionHeader)
 /* this HTML must be in calling code if skipSectionHeader is TRUE */

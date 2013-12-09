@@ -6691,44 +6691,44 @@ if (primarySubtrack == NULL)  // primarySubtrack is set for tableBrowser but not
 }
 
 boolean superTrackDropDownWithExtra(struct cart *cart, struct trackDb *tdb,
-                                int visibleChild,char *extra)
-/* Displays hide/show dropdown for supertrack.
- * Set visibleChild to indicate whether 'show' should be grayed
- * out to indicate that no supertrack members are visible:
- *    0 to gray out (no visible children)
- *    1 don't gray out (there are visible children)
- *   -1 don't know (this function should determine)
- * If -1,i the subtracks field must be populated with the child trackDbs.
- * Returns false if not a supertrack */
+	int visibleChild,char *extra)
+	/* Displays hide/show dropdown for supertrack.
+	* Set visibleChild to indicate whether 'show' should be grayed
+	* out to indicate that no supertrack members are visible:
+	*    0 to gray out (no visible children)
+	*    1 don't gray out (there are visible children)
+	*   -1 don't know (this function should determine)
+	* If -1,i the subtracks field must be populated with the child trackDbs.
+	* Returns false if not a supertrack */
 {
-if (!tdbIsSuperTrack(tdb))
-    return FALSE;
+	if (!tdbIsSuperTrack(tdb))
+		return FALSE;
 
-/* determine if supertrack is show/hide */
-boolean show = FALSE;
-char *setting =
-        cartUsualString(cart, tdb->track, tdb->isShow ? "show" : "hide");
-if (sameString("show", setting))
-    show = TRUE;
+	/* determine if supertrack is show/hide */
+	boolean show = FALSE;
+	char *setting =
+		cartUsualString(cart, tdb->track, tdb->isShow ? "show" : "hide");
+	if (sameString("show", setting))
+		show = TRUE;
 
-/* Determine if any tracks in supertrack are visible; if not,
- * the 'show' is grayed out */
-if (show && (visibleChild == -1))
-    {
-    visibleChild = 0;
-    struct trackDb *cTdb;
-    for (cTdb = tdb->subtracks; cTdb != NULL; cTdb = tdb->next)
-        {
-        cTdb->visibility =
-                hTvFromString(cartUsualString(cart, cTdb->track,
-                                      hStringFromTv(cTdb->visibility)));
-        if (cTdb->visibility != tvHide)
-            visibleChild = 1;
-        }
-    }
-hideShowDropDownWithClassAndExtra(tdb->track, show, (show && visibleChild) ?
-                            "normalText visDD" : "hiddenText visDD",extra);
-return TRUE;
+	/* Determine if any tracks in supertrack are visible; if not,
+	* the 'show' is grayed out */
+	if (show && (visibleChild == -1))
+	{
+		visibleChild = 0;
+		struct trackDb *cTdb;
+		for (cTdb = tdb->subtracks; cTdb != NULL; cTdb = tdb->next)
+		{
+			cTdb->visibility =
+				hTvFromString(cartUsualString(cart, cTdb->track,
+				hStringFromTv(cTdb->visibility)));
+			if (cTdb->visibility != tvHide)
+				visibleChild = 1;
+		}
+	}
+	hideShowDropDownWithClassAndExtra(tdb->track, show, (show && visibleChild) ?
+		"normalText visDD" : "hiddenText visDD",extra);
+	return TRUE;
 }
 
 int tvConvertToNumericOrder(enum trackVisibility v)

@@ -4486,6 +4486,28 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 		int vis = (hideAll ? tvHide : -1);
 		changeTrackVis(groupList, NULL, vis);
 	}
+
+	// ***** HACK here: separate ENCODE and lab groups ********************
+	// only reset tracks when persistent flag is not set
+	if(cartUsualBoolean(cart, "showEncode", FALSE)) {
+		// have ENCODE, hide lab tracks
+		changeTrackVis(groupList, "lab", tvHide);
+		if(!cartUsualBoolean(cart, "persistentEncodeStatusOn", FALSE)) {
+			changeTrackVis(groupList, "encode", -1);
+			cartSetBoolean(cart, "persistentEncodeStatusOn", TRUE);
+		}
+		cartRemove(cart, "persistentEncodeStatusOff");
+	} else {
+		// No ENCODE
+		changeTrackVis(groupList, "encode", tvHide);
+		if(!cartUsualBoolean(cart, "persistentEncodeStatusOff", FALSE)) {
+			changeTrackVis(groupList, "lab", -1);
+			cartSetBoolean(cart, "persistentEncodeStatusOff", TRUE);
+		}
+		cartRemove(cart, "persistentEncodeStatusOn");
+	}
+	// ***** END HACK ****************
+
 	if (!hgControlOnly) {
 
 		/* Before loading items, deal with the next/prev item arrow buttons if pressed. */
@@ -5225,15 +5247,15 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", trackSeriesName, track->track,
 					show? "dense": "hide");
 				if(trackFeature != NULL) {
-					hPrintf("<span id=\"%s_title\">%s (%s)</span>", trackSeriesName, trackDataType, trackFeature);
-					hPrintf("<span id=\"%s_data\">%s</span>", trackSeriesName, trackSampleType);
+					hPrintf("<span id=\"%s_title\">%s (%s)</span>\n", trackSeriesName, trackDataType, trackFeature);
+					hPrintf("<span id=\"%s_data\">%s</span>\n", trackSeriesName, trackSampleType);
 				} else {
 					if(trackSampleType != NULL) {
-						hPrintf("<span id=\"%s_title\">%s</span>", trackSeriesName, trackDataType);
-						hPrintf("<span id=\"%s_data\">%s</span>", trackSeriesName, trackSampleType);
+						hPrintf("<span id=\"%s_title\">%s</span>\n", trackSeriesName, trackDataType);
+						hPrintf("<span id=\"%s_data\">%s</span>\n", trackSeriesName, trackSampleType);
 					} else {
-						hPrintf("<span id=\"%s_title\">%s</span>", trackSeriesName, trackDataType);
-						hPrintf("<span id=\"%s_data\"><em>N/A</em></span>", trackSeriesName);
+						hPrintf("<span id=\"%s_title\">%s</span>\n", trackSeriesName, trackDataType);
+						hPrintf("<span id=\"%s_data\"><em>N/A</em></span>\n", trackSeriesName);
 					}
 				}
 			}
@@ -5250,7 +5272,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				// TODO: META INFO
 				//			currently the only meta info needed for common tracks is sample type
 				//			may add other meta info here if needed
-				char *trackSampleType, *trackLabName;
+				char *trackSampleType, *trackLabName, *trackDataType;
 				boolean show = FALSE;
 				if (sameString(track->tdb->track, "multishade")) {
 					continue;
@@ -5267,6 +5289,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 
 				trackSampleType = trackDbSetting(track->tdb, "cellType");
 				trackLabName = trackDbSetting(track->tdb, "labName");
+				trackDataType = trackDbSetting(track->tdb, "dataType");
 
 				if (hTrackOnChrom(track->tdb, chromName))
 				{
@@ -5284,6 +5307,11 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				}
 				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", track->shortLabel, track->track,
 					show? "dense": "hide");
+				if(trackDataType != NULL) {
+					hPrintf("<span id=\"%s_title\">%s (%s)</span>\n", track->shortLabel, track->shortLabel, trackDataType);
+				} else {
+					hPrintf("<span id=\"%s_title\">%s</span>\n", track->shortLabel, track->shortLabel);
+				}
 				if(trackSampleType != NULL) {
 					hPrintf("<span id=\"%s_data\">%s\t%s</span>\n", track->shortLabel, trackSampleType, trackLabName);
 				} else {
@@ -5320,6 +5348,12 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 	}
 #endif /* SLOW */
 	if (CBIsInBrowser) {
+		//// ***** MORE HACK: keep encode status *****
+		//if(cartUsualBoolean(cart, "showEncode", FALSE)) {
+		//	hPrintf("<input type=\"hidden\" id=\"showEncode\" name=\"showEncode\" value=\"on\">\n");
+		//}
+		//cartRemove(cart, "showEncode");
+		//// ***** END MORE HACK *****
 		if ((!psOutput) && hgControlOnly)
 			cartSaveSession(cart);   /* Put up hgsid= as hidden variable. */
 		hPrintf("</FORM>\n");

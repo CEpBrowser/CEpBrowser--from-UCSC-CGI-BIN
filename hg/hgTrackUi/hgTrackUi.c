@@ -2484,9 +2484,19 @@ if(tdbIsContainer(tdb))
     else if (!ajax) // Overkill on !ajax, because ajax shouldn't be called for a composite
         cartTdbTreeReshapeIfNeeded(cart,tdb);
     }
-
-printf("<FORM ACTION=\"%s\" NAME=\""MAIN_FORM"\" METHOD=%s>\n\n",
-       hgTracksName(), cartUsualString(cart, "formMethod", "POST"));
+#ifndef PRIVATE_CGI
+if(cartOptionalString(cart, "setTgt")) {
+	// This means the form is within CPBrowser, so add target
+	// Maybe add further script to hide this panel upon submit
+	printf("<FORM ONSUBMIT=\"parent.trackSettingSubmit('%s');\" ACTION=\"%s\" NAME=\""
+		   MAIN_FORM"\" METHOD=%s TARGET=\"%s\">\n\n",
+		   cartOptionalString(cart, "setTgt"),
+		   hgTracksName(), cartUsualString(cart, "formMethod", "POST"), 
+		   cartOptionalString(cart, "setTgt"));
+} else 
+#endif
+	printf("<FORM ACTION=\"%s\" NAME=\""MAIN_FORM"\" METHOD=%s>\n\n",
+		   hgTracksName(), cartUsualString(cart, "formMethod", "POST"));
 cartSaveSession(cart);
 printf("<B style='font-family:serif; font-size:200%%;'>%s%s</B>\n", tdb->longLabel, tdbIsSuper(tdb) ? " Tracks" : "");
 

@@ -3568,7 +3568,11 @@ struct trackDb *hTrackDb(char *db)
 struct trackDb *tdbList = NULL;
 //if (differentStringNullOk(existingDb, db))
 //    {
+#ifndef PRIVATE_CGI
+    tdbList = loadTrackDb(db, "grp != 'LabPrivate'");
+#else
     tdbList = loadTrackDb(db, NULL);
+#endif
     tdbList = trackDbLinkUpGenerations(tdbList);
 //    freeMem(existingDb);
 //    existingDb = cloneString(db);
@@ -3611,9 +3615,15 @@ if (!tdb || !tdbIsSuper(tdb))
 
 struct sqlConnection *conn = hAllocConn(db);
 char where[256];
+#ifndef PRIVATE_CGI
+safef(where, sizeof(where),
+   "grp != 'LabPrivate' AND settings rlike '^(.*\n)?superTrack %s([ \n].*)?$' order by priority desc",
+    tdb->track);
+#else
 safef(where, sizeof(where),
    "settings rlike '^(.*\n)?superTrack %s([ \n].*)?$' order by priority desc",
     tdb->track);
+#endif
 tdb->subtracks = loadAndLookupTrackDb(conn, where);       // TODO: Straighten out when super points to children and when not!
 struct trackDb *subTdb;
 for (subTdb = tdb->subtracks; subTdb != NULL; subTdb = subTdb->next)

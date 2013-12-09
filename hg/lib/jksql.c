@@ -723,6 +723,7 @@ if ((sc->conn = conn = mysql_init(NULL)) == NULL)
     monitorLeave();
     errAbort("Couldn't connect to mySQL.");
     }
+mysql_options(conn, MYSQL_OPT_LOCAL_INFILE, 0);
 if (mysql_real_connect(
 	conn,
 	host, /* host */
