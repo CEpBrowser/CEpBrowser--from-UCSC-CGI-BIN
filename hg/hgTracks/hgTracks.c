@@ -96,6 +96,7 @@ char *protDbName;               /* Name of proteome database for this genome. */
 #define BRIGHT 3
 #define MAXCHAINS 50000000
 boolean hgDebug = FALSE;      /* Activate debugging code. Set to true by hgDebug=on in command line*/
+boolean hgControlOnly = FALSE;		/* XC: Activate control-only mode, do not draw any tracks, only show the controls */
 int imagePixelHeight = 0;
 boolean dragZooming = TRUE;
 struct hash *oldVars = NULL;
@@ -269,7 +270,7 @@ void changeTrackVis(struct group *groupList, char *groupTarget, int changeVis)
 					{
 						if (changeVis == tdb->visibility)
 							/* remove if setting to default vis */
-							cartRemove(cart, track->track);
+								cartRemove(cart, track->track);
 						else
 							cartSetString(cart, track->track, hStringFromTv(changeVis));
 						track->visibility = changeVis;
@@ -306,8 +307,8 @@ int trackOffsetX()
 
 
 static void mapBoxTrackUi(struct hvGfx *hvg, int x, int y, int width,
-	int height, char *name, char *shortLabel, char *id)
-	/* Print out image map rectangle that invokes hgTrackUi. */
+						  int height, char *name, char *shortLabel, char *id)
+						  /* Print out image map rectangle that invokes hgTrackUi. */
 {
 	x = hvGfxAdjXW(hvg, x, width);
 	char *url = trackUrl(name, chromName);
@@ -368,14 +369,14 @@ char *trackUrl(char *mapName, char *chromName)
 	if(chromName == NULL)
 #ifndef PRIVATE_CGI
 		safef(buf, sizeof(buf), "%s?%s=%u&g=%s&setTgt=%s", hgTrackUiName(), 
-			cartSessionVarName(), cartSessionId(cart), encodedMapName, database);
+		cartSessionVarName(), cartSessionId(cart), encodedMapName, database);
 #else
 		safef(buf, sizeof(buf), "%s?%s=%u&g=%s", hgTrackUiName(), cartSessionVarName(), cartSessionId(cart), encodedMapName);
 #endif
 	else
 #ifndef PRIVATE_CGI
 		safef(buf, sizeof(buf), "%s?%s=%u&c=%s&g=%s&setTgt=%s", hgTrackUiName(), 
-			cartSessionVarName(), cartSessionId(cart), chromName, encodedMapName, database);
+		cartSessionVarName(), cartSessionId(cart), chromName, encodedMapName, database);
 #else
 		safef(buf, sizeof(buf), "%s?%s=%u&c=%s&g=%s", hgTrackUiName(), cartSessionVarName(), cartSessionId(cart), chromName, encodedMapName);
 #endif
@@ -443,8 +444,8 @@ static int trackPlusLabelHeight(struct track *track, int fontHeight)
 }
 
 void drawColoredButtonBox(struct hvGfx *hvg, int x, int y, int w, int h,
-	int enabled, Color shades[])
-	/* draw button box, providing shades of the desired button color */
+						  int enabled, Color shades[])
+						  /* draw button box, providing shades of the desired button color */
 {
 	int light = shades[1], mid = shades[2], dark = shades[4];
 	if (enabled)
@@ -495,7 +496,7 @@ void beforeFirstPeriod( char *str )
 }
 
 static void drawBases(struct hvGfx *hvg, int x, int y, int width, int height,
-	Color color, MgFont *font, boolean complementSeq,
+					  Color color, MgFont *font, boolean complementSeq,
 struct dnaSeq *thisSeq)
 	/* Draw evenly spaced bases. */
 {
@@ -516,8 +517,8 @@ struct dnaSeq *thisSeq)
 }
 
 void drawComplementArrow( struct hvGfx *hvg, int x, int y,
-	int width, int height, MgFont *font)
-	/* Draw arrow and create clickbox for complementing ruler bases */
+						 int width, int height, MgFont *font)
+						 /* Draw arrow and create clickbox for complementing ruler bases */
 {
 	boolean baseCmpl = cartUsualBooleanDb(cart, database, COMPLEMENT_BASES_VAR, FALSE);
 	// reverse arrow when base complement doesn't match display
@@ -1114,8 +1115,8 @@ struct track *oligoMatchTg()
 }
 
 static int doLeftLabels(struct track *track, struct hvGfx *hvg, MgFont *font,
-	int y)
-	/* Draw left labels.  Return y coord. */
+						int y)
+						/* Draw left labels.  Return y coord. */
 {
 	struct slList *prev = NULL;
 
@@ -1322,13 +1323,13 @@ static int doLeftLabels(struct track *track, struct hvGfx *hvg, MgFont *font,
 }
 
 static void doLabelNextItemButtons(struct track *track, struct track *parentTrack, struct hvGfx *hvg, MgFont *font, int y,
-	int trackPastTabX, int trackPastTabWidth, int fontHeight,
-	int insideHeight, Color labelColor)
-	/* If the track allows label next-item buttons (next gene), draw them. */
-	/* The button will cause hgTracks to run again with the additional CGI */
-	/* vars nextItem=trackName or prevItem=trackName, which will then  */
-	/* signal the browser to find the next thing on the track before it */
-	/* does anything else. */
+								   int trackPastTabX, int trackPastTabWidth, int fontHeight,
+								   int insideHeight, Color labelColor)
+								   /* If the track allows label next-item buttons (next gene), draw them. */
+								   /* The button will cause hgTracks to run again with the additional CGI */
+								   /* vars nextItem=trackName or prevItem=trackName, which will then  */
+								   /* signal the browser to find the next thing on the track before it */
+								   /* does anything else. */
 {
 	int portWidth = insideWidth;
 	int portX = insideX;
@@ -1394,7 +1395,7 @@ struct hvGfx *hvg, MgFont *font, int y)
 			}
 			if (!toggleDone) {
 				mapBoxToggleVis(hvg, trackPastTabX, y+1,trackPastTabWidth, insideHeight,
-				(theImgBox ? track : parentTrack));
+					(theImgBox ? track : parentTrack));
 			}
 			y += fontHeight;
 		}
@@ -1404,8 +1405,8 @@ struct hvGfx *hvg, MgFont *font, int y)
 }
 
 static int doDrawItems(struct track *track, struct hvGfx *hvg, MgFont *font,
-	int y, long *lastTime)
-	/* Draw track items.  Return y coord */
+					   int y, long *lastTime)
+					   /* Draw track items.  Return y coord */
 {
 	int fontHeight = mgFontLineHeight(font);
 	int pixWidth = tl.picWidth;
@@ -1504,8 +1505,8 @@ static int doMapItems(struct track *track, struct hvGfx *hvg, int fontHeight, in
 }
 
 static int doOwnLeftLabels(struct track *track, struct hvGfx *hvg,
-	MgFont *font, int y)
-	/* Track draws it own, custom left labels */
+						   MgFont *font, int y)
+						   /* Track draws it own, custom left labels */
 {
 	int fontHeight = mgFontLineHeight(font);
 	int tHeight = trackPlusLabelHeight(track, fontHeight);
@@ -1524,8 +1525,8 @@ static int doOwnLeftLabels(struct track *track, struct hvGfx *hvg,
 static int getMaxWindowToDraw(struct trackDb *tdb);
 
 int doTrackMap(struct track *track, struct hvGfx *hvg, int y, int fontHeight,
-	int trackPastTabX, int trackPastTabWidth)
-	/* Write out the map for this track. Return the new offset. */
+			   int trackPastTabX, int trackPastTabWidth)
+			   /* Write out the map for this track. Return the new offset. */
 {
 	int mapHeight = 0;
 	switch (track->limitedVis)
@@ -1650,8 +1651,8 @@ enum trackVisibility limitedVisFromComposite(struct track *subtrack)
 }
 
 static int makeRulerZoomBoxes(struct hvGfx *hvg, struct cart *cart, int winStart,int winEnd,
-	int insideWidth,int seqBaseCount,int rulerClickY,int rulerClickHeight)
-	/* Make hit boxes that will zoom program around ruler. */
+							  int insideWidth,int seqBaseCount,int rulerClickY,int rulerClickHeight)
+							  /* Make hit boxes that will zoom program around ruler. */
 {
 	int boxes = 30;
 	int winWidth = winEnd - winStart;
@@ -1707,9 +1708,9 @@ static int makeRulerZoomBoxes(struct hvGfx *hvg, struct cart *cart, int winStart
 }
 
 static int doDrawRuler(struct hvGfx *hvg,int *newWinWidth,int *rulerClickHeight,
-	int rulerHeight, int yAfterRuler, int yAfterBases, MgFont *font,
-	int fontHeight,boolean rulerCds)
-	/* draws the ruler. */
+					   int rulerHeight, int yAfterRuler, int yAfterBases, MgFont *font,
+					   int fontHeight,boolean rulerCds)
+					   /* draws the ruler. */
 {
 	int scaleBarPad = 2;
 	int scaleBarHeight = fontHeight;
@@ -1948,7 +1949,7 @@ void makeActiveImage(struct track *trackList, char *psOutput)
 	char *rulerTtl = NULL;
 	if(theImgBox)
 		// theImgBox is a global for now to avoid huge rewrite of hgTracks.  It is started
-		// prior to this in doTrackForm()
+			// prior to this in doTrackForm()
 	{
 		rulerTtl = (dragZooming?"drag select or click to zoom":"click to zoom 3x");
 		hPrintf("<input type='hidden' name='db' value='%s'>\n", database);
@@ -2625,8 +2626,8 @@ void makeActiveImage(struct track *trackList, char *psOutput)
 }
 
 static void printEnsemblAnchor(char *database, char* archive,
-	char *chrName, int start, int end)
-	/* Print anchor to Ensembl display on same window. */
+							   char *chrName, int start, int end)
+							   /* Print anchor to Ensembl display on same window. */
 {
 	char *scientificName = hScientificName(database);
 	char *dir = ensOrgNameFromScientificName(scientificName);
@@ -2759,7 +2760,7 @@ struct track **pTrackList)
 		next = tdb->next;
 		if(trackNameFilter != NULL && strcmp(trackNameFilter, tdb->track))
 			// suppress loading & display of all tracks except for the one passed in via trackNameFilter
-			continue;
+				continue;
 		track = trackFromTrackDb(tdb);
 		track->hasUi = TRUE;
 		if (slCount(tdb->subtracks) != 0)
@@ -3372,7 +3373,7 @@ void loadCustomTracks(struct track **pTrackList)
 							{
 								if (hTvFromString(command) == tg->tdb->visibility)
 									/* remove if setting to default vis */
-									cartRemove(cart, tg->track);
+										cartRemove(cart, tg->track);
 								else
 									cartSetString(cart, tg->track, command);
 								/* hide or show supertrack enclosing this track */
@@ -3848,9 +3849,9 @@ boolean superTrackHasVisibleMembers(struct trackDb *tdb)
 }
 
 static void groupTracks(struct track **pTrackList, struct group **pGroupList,
-	int vis)
-	/* Make up groups and assign tracks to groups.
-	* If vis is -1, restore default groups to tracks. */
+						int vis)
+						/* Make up groups and assign tracks to groups.
+						* If vis is -1, restore default groups to tracks. */
 {
 	struct group *unknown = NULL;
 	struct group *group, *list = NULL;
@@ -4196,10 +4197,10 @@ boolean isCollapsedGroup(struct group *grp)
 }
 
 void collapseGroupGoodies(boolean isOpen, boolean wantSmallImage,
-	char **img, char **indicator, char **otherState)
-	/* Get image, char representation of image, and 'otherState' (1 or 0)
-	* for a group, based on whether it is collapsed, and whether we want
-	* larger or smaller image for collapse box */
+						  char **img, char **indicator, char **otherState)
+						  /* Get image, char representation of image, and 'otherState' (1 or 0)
+						  * for a group, based on whether it is collapsed, and whether we want
+						  * larger or smaller image for collapse box */
 {
 	if (otherState)
 		*otherState = (isOpen ? "1" : "0");
@@ -4285,10 +4286,10 @@ static int getMaxWindowToDraw(struct trackDb *tdb)
 }
 
 static void drawMaxWindowWarning(struct track *tg, int seqStart, int seqEnd, struct hvGfx *hvg,
-	int xOff, int yOff, int width, MgFont *font, Color color,
-	enum trackVisibility vis)
-	/* This is a stub drawItems handler to be swapped in for the usual drawItems when the window
-	* size is larger than the threshold specified by trackDb setting maxWindowToDraw. */
+								 int xOff, int yOff, int width, MgFont *font, Color color,
+								 enum trackVisibility vis)
+								 /* This is a stub drawItems handler to be swapped in for the usual drawItems when the window
+								 * size is larger than the threshold specified by trackDb setting maxWindowToDraw. */
 {
 	int maxWinToDraw = getMaxWindowToDraw(tg->tdb);
 	char commafied[256];
@@ -4400,7 +4401,9 @@ void parentChildCartCleanup(struct track *trackList,struct cart *newCart,struct 
 void doTrackForm(char *psOutput, struct tempName *ideoTn)
 	/* Make the tracks display form with the zoom/scroll buttons and the active
 	* image.  If the ideoTn parameter is not NULL, it is filled in if the
-	* ideogram is created.  */
+	* ideogram is created. 
+	* HACK: if hgControlOnly is on, then most functions other than the track controllers
+	*		will be disabled for speed. */
 {
 	struct group *group;
 	struct track *track;
@@ -4438,24 +4441,28 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 		hgFindMatches = NULL;
 	}
 
-	/* Tell browser where to go when they click on image. */
-	hPrintf("<FORM ACTION=\"%s\" NAME=\"TrackHeaderForm\" id=\"TrackHeaderForm\" METHOD=\"GET\">\n\n", hgTracksName());
-	hPrintf("<input type='hidden' id='hgt.insideX' name='insideX' value='%d'>\n", insideX);
-	hPrintf("<input type='hidden' id='hgt.revCmplDisp' name='revCmplDisp' value='%d'>\n", revCmplDisp);
-	if (!psOutput) cartSaveSession(cart);
-	clearButtonJavascript = "document.TrackHeaderForm.position.value=''; document.getElementById('suggest').value='';";
+	if (!hgControlOnly) {
 
-	/* See if want to include sequence search results. */
-	userSeqString = cartOptionalString(cart, "ss");
-	if (userSeqString && !ssFilesExist(userSeqString))
-	{
-		userSeqString = NULL;
-		cartRemove(cart, "ss");
+		/* Tell browser where to go when they click on image. */
+		hPrintf("<FORM ACTION=\"%s\" NAME=\"TrackHeaderForm\" id=\"TrackHeaderForm\" METHOD=\"GET\">\n\n", hgTracksName());
+		hPrintf("<input type='hidden' id='hgt.insideX' name='insideX' value='%d'>\n", insideX);
+		hPrintf("<input type='hidden' id='hgt.revCmplDisp' name='revCmplDisp' value='%d'>\n", revCmplDisp);
+		if (!psOutput) cartSaveSession(cart);
+		clearButtonJavascript = "document.TrackHeaderForm.position.value=''; document.getElementById('suggest').value='';";
+
+		/* See if want to include sequence search results. */
+		userSeqString = cartOptionalString(cart, "ss");
+		if (userSeqString && !ssFilesExist(userSeqString))
+		{
+			userSeqString = NULL;
+			cartRemove(cart, "ss");
+		}
+		if (!hideControls)
+			hideControls = cartUsualBoolean(cart, "hideControls", FALSE);
+		if (measureTiming)
+			uglyTime("Time before getTrackList");
+
 	}
-	if (!hideControls)
-		hideControls = cartUsualBoolean(cart, "hideControls", FALSE);
-	if (measureTiming)
-		uglyTime("Time before getTrackList");
 	trackList = getTrackList(&groupList, defaultTracks ? -1 : -2);
 	makeGlobalTrackHash(trackList);
 #ifdef SOON
@@ -4480,26 +4487,14 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 		changeTrackVis(groupList, NULL, vis);
 	}
 
-	/* Before loading items, deal with the next/prev item arrow buttons if pressed. */
-	if (cgiVarExists("hgt.nextItem"))
-		doNextPrevItem(TRUE, cgiUsualString("hgt.nextItem", NULL));
-	else if (cgiVarExists("hgt.prevItem"))
-		doNextPrevItem(FALSE, cgiUsualString("hgt.prevItem", NULL));
-
-	if(advancedJavascriptFeaturesEnabled(cart) && !psOutput && !cgiVarExists("hgt.imageV1"))
-	{
-		// Start an imagebox (global for now to avoid huge rewrite of hgTracks)
-		// Set up imgBox dimensions
-		int sideSliceWidth  = 0;   // Just being explicit
-		if (withLeftLabels)
-			sideSliceWidth   = (insideX - gfxBorder*3) + 2;
-		theImgBox = imgBoxStart(database,chromName,winStart,winEnd,(!revCmplDisp),sideSliceWidth,tl.picWidth);
-#ifdef IMAGEv2_DRAG_SCROLL
-		// Define a portal with a default expansion size, then set the global dimensions to the full image size
-		if(imgBoxPortalDefine(theImgBox,&winStart,&winEnd,&(tl.picWidth),0))
-		{
-			winBaseCount = winEnd - winStart;
-			insideWidth = tl.picWidth-gfxBorder-insideX;
+	// ***** HACK here: separate ENCODE and lab groups ********************
+	// only reset tracks when persistent flag is not set
+	if(cartUsualBoolean(cart, "showEncode", FALSE)) {
+		// have ENCODE, hide lab tracks
+		changeTrackVis(groupList, "lab", tvHide);
+		if(!cartUsualBoolean(cart, "persistentEncodeStatusOn", FALSE)) {
+			changeTrackVis(groupList, "encode", -1);
+			cartSetBoolean(cart, "persistentEncodeStatusOn", TRUE);
 		}
 #endif//def IMAGEv2_DRAG_SCROLL
 	}
@@ -4789,9 +4784,14 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 	makeActiveImage(trackList, psOutput);
 	fflush(stdout);
 
-	if(trackImgOnly)
-		// bail out b/c we are done
-		return;
+		if(trackImgOnly)
+			// bail out b/c we are done
+				return;
+
+	} else { // is hgControlOnly
+		hPrintf("<FORM ACTION=\"%s?hgControlOnly=on\" NAME=\"TrackForm\" id=\"TrackForm\" METHOD=\"POST\">\n\n", hgTracksName());
+		//hPrintf("<INPUT TYPE='hidden' id='hgControlOnly' name='hgControlOnly' value='on'>\n");
+	}
 
 	if (!CBIsInBrowser && !hideControls)
 	{
@@ -4976,7 +4976,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 					struct track *track = tr->track;
 					if (tdbIsSuperTrackChild(track->tdb))
 						/* don't display supertrack members */
-						continue;
+							continue;
 					myControlGridStartCell(cg, isOpen, group->name);
 					if (track->hasUi)
 					{
@@ -5086,7 +5086,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				boolean show = FALSE;
 				if (tdbIsSuperTrackChild(track->tdb))
 					/* don't display supertrack members */
-					continue;
+						continue;
 
 				trackSeriesName = trackDbSetting(track->tdb, "compSeries");
 				if(trackSeriesName == NULL) {
@@ -5126,13 +5126,24 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				}
 				if (tdbIsSuperTrackChild(track->tdb))
 					/* don't display supertrack members */
+						continue;
+
+				trackSeriesName = trackDbSetting(track->tdb, "compSeries");
 					continue;
+				}
+				if (tdbIsSuperTrackChild(track->tdb))
+					/* don't display supertrack members */
+						continue;
 
 				trackSeriesName = trackDbSetting(track->tdb, "compSeries");
 				if(trackSeriesName != NULL) {
 					// linked throughout the species
 					continue;
 				}
+
+				trackSampleType = trackDbSetting(track->tdb, "cellType");
+				trackLabName = trackDbSetting(track->tdb, "labName");
+				trackDataType = trackDbSetting(track->tdb, "dataType");
 
 				if (hTrackOnChrom(track->tdb, chromName))
 				{
@@ -5150,10 +5161,21 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				}
 				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", track->shortLabel, track->track,
 					show? "dense": "hide");
+				if(trackDataType != NULL) {
+					hPrintf("<span id=\"%s_title\">%s (%s)</span>\n", track->shortLabel, track->shortLabel, trackDataType);
+				} else {
+					hPrintf("<span id=\"%s_title\">%s</span>\n", track->shortLabel, track->shortLabel);
+				}
+				if(trackSampleType != NULL) {
+					hPrintf("<span id=\"%s_data\">%s\t%s</span>\n", track->shortLabel, trackSampleType, trackLabName);
+				} else {
+					hPrintf("<span id=\"%s_data\"><em>N/A</em>\t%s</span>\n", track->shortLabel, trackLabName);
+				}
 			}
 
 		}
 		hPrintf("</DIV>\n");
+
 
 	}
 	hPrintf("</CENTER>\n");
@@ -5179,14 +5201,24 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 		}
 	}
 #endif /* SLOW */
-	if (!CBIsInBrowser) {
+	if (CBIsInBrowser) {
+		//// ***** MORE HACK: keep encode status *****
+		//if(cartUsualBoolean(cart, "showEncode", FALSE)) {
+		//	hPrintf("<input type=\"hidden\" id=\"showEncode\" name=\"showEncode\" value=\"on\">\n");
+		//}
+		//cartRemove(cart, "showEncode");
+		//// ***** END MORE HACK *****
+		if ((!psOutput) && hgControlOnly)
+			cartSaveSession(cart);   /* Put up hgsid= as hidden variable. */
 		hPrintf("</FORM>\n");
 	}
 
-	/* hidden form for custom tracks CGI */
-	hPrintf("<FORM ACTION='%s' NAME='customTrackForm'>", hgCustomName());
-	cartSaveSession(cart);
-	hPrintf("</FORM>\n");
+	if (!hgControlOnly) {
+		/* hidden form for custom tracks CGI */
+		hPrintf("<FORM ACTION='%s' NAME='customTrackForm'>", hgCustomName());
+		cartSaveSession(cart);
+		hPrintf("</FORM>\n");
+	}
 
 	pruneRedundantCartVis(trackList);
 }
@@ -5752,7 +5784,7 @@ void resetVars()
 void doMiddle(struct cart *theCart)
 	/* Print the body of an html file.   */
 {
-	char *debugTmp = NULL;
+	char *debugTmp = NULL, *controlOnly = NULL;
 	/* Uncomment this to see parameters for debugging. */
 	/* struct dyString *state = NULL; */
 	/* Initialize layout and database. */
@@ -5781,7 +5813,24 @@ void doMiddle(struct cart *theCart)
 
 	setUdcCacheDir();
 
+	// HACK here: if hgControlOnly is specified, only display the current control part for CPBrowser 
+	//				to use, nothing else is done;
+
 	initTl();
+
+	controlOnly = cartUsualString(cart, "hgControlOnly", "off");
+	if(sameString(controlOnly, "on")) {
+		hgControlOnly = TRUE;
+		cartSetString(cart, "org", organism);
+		cartSetString(cart, "db", database);
+		cartSetString(cart, "hgControlOnly", "off");		// this is to prevent normal browser being affected
+		doTrackForm(NULL, NULL);
+		return;
+	}
+
+	// END HACK
+
+
 	measureTiming = isNotEmpty(cartOptionalString(cart, "measureTiming"));
 
 	char *configPageCall = cartCgiUsualString(cart, "hgTracksConfigPage", "notSet");
