@@ -5290,6 +5290,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				trackSampleType = trackDbSetting(track->tdb, "cellType");
 				trackLabName = trackDbSetting(track->tdb, "labName");
 				trackDataType = trackDbSetting(track->tdb, "dataType");
+				trackFeature = trackDbSetting(track->tdb, "trackFeature");
 
 				if (hTrackOnChrom(track->tdb, chromName))
 				{
@@ -5307,10 +5308,10 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				}
 				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", track->shortLabel, track->track,
 					show? "dense": "hide");
-				if(trackDataType != NULL) {
-					hPrintf("<span id=\"%s_title\">%s (%s)</span>\n", track->shortLabel, track->shortLabel, trackDataType);
+				if(trackFeature != NULL) {
+					hPrintf("<span id=\"%s_title\">%s (%s)</span>\n", track->shortLabel, trackFeature, trackDataType);
 				} else {
-					hPrintf("<span id=\"%s_title\">%s</span>\n", track->shortLabel, track->shortLabel);
+					hPrintf("<span id=\"%s_title\">%s</span>\n", track->shortLabel, trackDataType);
 				}
 				if(trackSampleType != NULL) {
 					hPrintf("<span id=\"%s_data\">%s\t%s</span>\n", track->shortLabel, trackSampleType, trackLabName);
