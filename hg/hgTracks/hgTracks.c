@@ -4496,293 +4496,328 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 			changeTrackVis(groupList, "encode", -1);
 			cartSetBoolean(cart, "persistentEncodeStatusOn", TRUE);
 		}
+		cartRemove(cart, "persistentEncodeStatusOff");
+	} else {
+		// No ENCODE
+		changeTrackVis(groupList, "encode", tvHide);
+		if(!cartUsualBoolean(cart, "persistentEncodeStatusOff", FALSE)) {
+			changeTrackVis(groupList, "lab", -1);
+			cartSetBoolean(cart, "persistentEncodeStatusOff", TRUE);
+		}
+		cartRemove(cart, "persistentEncodeStatusOn");
+	}
+	// ***** END HACK ****************
+
+	if (!hgControlOnly) {
+
+		/* Before loading items, deal with the next/prev item arrow buttons if pressed. */
+		if (cgiVarExists("hgt.nextItem"))
+			doNextPrevItem(TRUE, cgiUsualString("hgt.nextItem", NULL));
+		else if (cgiVarExists("hgt.prevItem"))
+			doNextPrevItem(FALSE, cgiUsualString("hgt.prevItem", NULL));
+
+		if(advancedJavascriptFeaturesEnabled(cart) && !psOutput && !cgiVarExists("hgt.imageV1"))
+		{
+			// Start an imagebox (global for now to avoid huge rewrite of hgTracks)
+			// Set up imgBox dimensions
+			int sideSliceWidth  = 0;   // Just being explicit
+			if (withLeftLabels)
+				sideSliceWidth   = (insideX - gfxBorder*3) + 2;
+			theImgBox = imgBoxStart(database,chromName,winStart,winEnd,(!revCmplDisp),sideSliceWidth,tl.picWidth);
+#ifdef IMAGEv2_DRAG_SCROLL
+			// Define a portal with a default expansion size, then set the global dimensions to the full image size
+			if(imgBoxPortalDefine(theImgBox,&winStart,&winEnd,&(tl.picWidth),0))
+			{
+				winBaseCount = winEnd - winStart;
+				insideWidth = tl.picWidth-gfxBorder-insideX;
+			}
 #endif//def IMAGEv2_DRAG_SCROLL
-	}
-
-	char *jsCommand = cartCgiUsualString(cart, hgtJsCommand, "");
-	if (!isEmpty(jsCommand))
-	{
-		cartRemove(cart, hgtJsCommand);
-		jsCommandDispatch(jsCommand, trackList);
-	}
-
-	/* Tell tracks to load their items. */
-	for (track = trackList; track != NULL; track = track->next)
-	{
-		/* adjust track visibility based on supertrack just before load loop */
-		if (tdbIsSuperTrackChild(track->tdb))
-			limitSuperTrackVis(track);
-
-		/* remove cart priority variables if they are set
-		to the default values in the trackDb */
-		if(!hTrackOnChrom(track->tdb, chromName))
-		{
-			track->limitedVis = tvHide;
-			track->limitedVisSet = TRUE;
 		}
-		else if (track->visibility != tvHide)
-		{
-			if (measureTiming)
-				lastTime = clock1000();
-			checkMaxWindowToDraw(track);
-			track->loadItems(track);
 
-			if (measureTiming)
+		char *jsCommand = cartCgiUsualString(cart, hgtJsCommand, "");
+		if (!isEmpty(jsCommand))
+		{
+			cartRemove(cart, hgtJsCommand);
+			jsCommandDispatch(jsCommand, trackList);
+		}
+
+		/* Tell tracks to load their items. */
+		for (track = trackList; track != NULL; track = track->next)
+		{
+			/* adjust track visibility based on supertrack just before load loop */
+			if (tdbIsSuperTrackChild(track->tdb))
+				limitSuperTrackVis(track);
+
+			/* remove cart priority variables if they are set
+			to the default values in the trackDb */
+			if(!hTrackOnChrom(track->tdb, chromName))
 			{
-				thisTime = clock1000();
-				track->loadTime = thisTime - lastTime;
+				track->limitedVis = tvHide;
+				track->limitedVisSet = TRUE;
+			}
+			else if (track->visibility != tvHide)
+			{
+				if (measureTiming)
+					lastTime = clock1000();
+				checkMaxWindowToDraw(track);
+				track->loadItems(track);
+
+				if (measureTiming)
+				{
+					thisTime = clock1000();
+					track->loadTime = thisTime - lastTime;
+				}
 			}
 		}
-	}
 
-	printTrackInitJavascript(trackList);
+		printTrackInitJavascript(trackList);
 
-	/* Generate two lists of hidden variables for track group visibility.  Kludgy,
-	but required b/c we have two different navigation forms on this page, but
-	we want open/close changes in the bottom form to be submitted even if the user
-	submits via the top form. */
-	struct dyString *trackGroupsHidden1 = newDyString(1000);
-	struct dyString *trackGroupsHidden2 = newDyString(1000);
-	for (group = groupList; group != NULL; group = group->next)
-	{
-		if (group->trackList != NULL)
+		/* Generate two lists of hidden variables for track group visibility.  Kludgy,
+		but required b/c we have two different navigation forms on this page, but
+		we want open/close changes in the bottom form to be submitted even if the user
+		submits via the top form. */
+		struct dyString *trackGroupsHidden1 = newDyString(1000);
+		struct dyString *trackGroupsHidden2 = newDyString(1000);
+		for (group = groupList; group != NULL; group = group->next)
 		{
-			int looper;
-			for(looper=1;looper<=2;looper++)
+			if (group->trackList != NULL)
 			{
-				boolean isOpen = !isCollapsedGroup(group);
-				char buf[1000];
-				safef(buf, sizeof(buf), "<input type='hidden' name=\"%s\" id=\"%s_%d\" value=\"%s\">\n", collapseGroupVar(group->name), collapseGroupVar(group->name), looper, isOpen ? "0" : "1");
-				dyStringAppend(looper == 1 ? trackGroupsHidden1 : trackGroupsHidden2, buf);
+				int looper;
+				for(looper=1;looper<=2;looper++)
+				{
+					boolean isOpen = !isCollapsedGroup(group);
+					char buf[1000];
+					safef(buf, sizeof(buf), "<input type='hidden' name=\"%s\" id=\"%s_%d\" value=\"%s\">\n", collapseGroupVar(group->name), collapseGroupVar(group->name), looper, isOpen ? "0" : "1");
+					dyStringAppend(looper == 1 ? trackGroupsHidden1 : trackGroupsHidden2, buf);
+				}
 			}
 		}
-	}
 
 #ifdef IMAGEv2_DRAG_SCROLL
-	if(theImgBox)
-	{
-		// If a portal was established, then set the global dimensions back to the portal size
-		if(imgBoxPortalDimensions(theImgBox,NULL,NULL,NULL,NULL,&winStart,&winEnd,&(tl.picWidth),NULL))
+		if(theImgBox)
 		{
-			winBaseCount = winEnd - winStart;
-			insideWidth = tl.picWidth-gfxBorder-insideX;
-		}
-	}
-#endif//def IMAGEv2_DRAG_SCROLL
-	/* Center everything from now on. */
-	hPrintf("<CENTER>\n");
-
-	if(trackImgOnly)
-	{
-		struct track *ideoTrack = chromIdeoTrack(trackList);
-		if (ideoTrack)
-		{
-			ideoTrack->limitedVisSet = TRUE;
-			ideoTrack->limitedVis = tvHide; /* Don't draw in main gif. */
-		}
-		makeActiveImage(trackList, psOutput);
-		fflush(stdout);
-		return;  // bail out b/c we are done
-	}
-
-
-	if (!hideControls)
-	{
-		/* set white-space to nowrap to prevent buttons from wrapping when screen is
-		* narrow */
-		if(CBIsInBrowser) {
-			// is within CPBrowser, hide the navigating menus
-			// also, does not print all the hotlinks or title
-			hPrintf("<DIV STYLE=\"display:none;\">\n");
-		} else {
-			hPrintf("<DIV STYLE=\"white-space:nowrap;\">\n");
-			hotLinks();
-			/* Show title . */
-			freezeName = hFreezeFromDb(database);
-			if(freezeName == NULL)
-				freezeName = "Unknown";
-			hPrintf("<FONT SIZE=5><B>");
-			if (startsWith("zoo",database) )
+			// If a portal was established, then set the global dimensions back to the portal size
+			if(imgBoxPortalDimensions(theImgBox,NULL,NULL,NULL,NULL,&winStart,&winEnd,&(tl.picWidth),NULL))
 			{
-				hPrintf("%s %s on %s June 2002 Assembly %s target1",
-					organization, browserName, organism, freezeName);
+				winBaseCount = winEnd - winStart;
+				insideWidth = tl.picWidth-gfxBorder-insideX;
 			}
-			else
+		}
+#endif//def IMAGEv2_DRAG_SCROLL
+		/* Center everything from now on. */
+		hPrintf("<CENTER>\n");
+
+		if(trackImgOnly)
+		{
+			struct track *ideoTrack = chromIdeoTrack(trackList);
+			if (ideoTrack)
 			{
-				if (sameString(organism, "Archaea"))
+				ideoTrack->limitedVisSet = TRUE;
+				ideoTrack->limitedVis = tvHide; /* Don't draw in main gif. */
+			}
+			makeActiveImage(trackList, psOutput);
+			fflush(stdout);
+			return;  // bail out b/c we are done
+		}
+
+
+		if (!hideControls)
+		{
+			/* set white-space to nowrap to prevent buttons from wrapping when screen is
+			* narrow */
+			if(CBIsInBrowser) {
+				// is within CPBrowser, hide the navigating menus
+				// also, does not print all the hotlinks or title
+				hPrintf("<DIV STYLE=\"display:none;\">\n");
+			} else {
+				hPrintf("<DIV STYLE=\"white-space:nowrap;\">\n");
+				hotLinks();
+				/* Show title . */
+				freezeName = hFreezeFromDb(database);
+				if(freezeName == NULL)
+					freezeName = "Unknown";
+				hPrintf("<FONT SIZE=5><B>");
+				if (startsWith("zoo",database) )
 				{
-					hPrintf("%s %s on Archaeon %s Assembly",
-						organization, browserName, freezeName);
+					hPrintf("%s %s on %s June 2002 Assembly %s target1",
+						organization, browserName, organism, freezeName);
 				}
 				else
 				{
-					if (stringIn(database, freezeName))
-						hPrintf("%s %s on %s %s Assembly",
-						organization, browserName, organism, freezeName);
+					if (sameString(organism, "Archaea"))
+					{
+						hPrintf("%s %s on Archaeon %s Assembly",
+							organization, browserName, freezeName);
+					}
 					else
-						hPrintf("%s %s on %s %s Assembly (%s)",
-						organization, browserName, organism, freezeName, database);
+					{
+						if (stringIn(database, freezeName))
+							hPrintf("%s %s on %s %s Assembly",
+							organization, browserName, organism, freezeName);
+						else
+							hPrintf("%s %s on %s %s Assembly (%s)",
+							organization, browserName, organism, freezeName, database);
+					}
 				}
+				hPrintf("</B></FONT><BR>\n");
+				/* This is a clear submit button that browsers will use by default when enter is pressed in position box. */
+				hPrintf("<INPUT TYPE=IMAGE BORDER=0 NAME=\"hgt.dummyEnterButton\" src=\"../images/DOT.gif\">");
+				/* Put up scroll and zoom controls. */
 			}
-			hPrintf("</B></FONT><BR>\n");
-			/* This is a clear submit button that browsers will use by default when enter is pressed in position box. */
-			hPrintf("<INPUT TYPE=IMAGE BORDER=0 NAME=\"hgt.dummyEnterButton\" src=\"../images/DOT.gif\">");
-			/* Put up scroll and zoom controls. */
-		}
 
 
 #ifndef USE_NAVIGATION_LINKS
-		hWrites("move ");
-		hButtonWithMsg("hgt.left3", "<<<", "move 95% to the left");
-		hButtonWithMsg("hgt.left2", " <<", "move 47.5% to the left");
-		hButtonWithMsg("hgt.left1", " < ", "move 10% to the left");
-		hButtonWithMsg("hgt.right1", " > ", "move 10% to the right");
-		hButtonWithMsg("hgt.right2", ">> ", "move 47.5% to the right");
-		hButtonWithMsg("hgt.right3", ">>>", "move 95% to the right");
-		hWrites(" zoom in ");
-		/* use button maker that determines padding, so we can share constants */
-		topButton("hgt.in1", ZOOM_1PT5X);
-		topButton("hgt.in2", ZOOM_3X);
-		topButton("hgt.in3", ZOOM_10X);
-		topButton("hgt.inBase", ZOOM_BASE);
-		hWrites(" zoom out ");
-		topButton("hgt.out1", ZOOM_1PT5X);
-		topButton("hgt.out2", ZOOM_3X);
-		topButton("hgt.out3", ZOOM_10X);
-		hWrites("<BR>\n");
+			hWrites("move ");
+			hButtonWithMsg("hgt.left3", "<<<", "move 95% to the left");
+			hButtonWithMsg("hgt.left2", " <<", "move 47.5% to the left");
+			hButtonWithMsg("hgt.left1", " < ", "move 10% to the left");
+			hButtonWithMsg("hgt.right1", " > ", "move 10% to the right");
+			hButtonWithMsg("hgt.right2", ">> ", "move 47.5% to the right");
+			hButtonWithMsg("hgt.right3", ">>>", "move 95% to the right");
+			hWrites(" zoom in ");
+			/* use button maker that determines padding, so we can share constants */
+			topButton("hgt.in1", ZOOM_1PT5X);
+			topButton("hgt.in2", ZOOM_3X);
+			topButton("hgt.in3", ZOOM_10X);
+			topButton("hgt.inBase", ZOOM_BASE);
+			hWrites(" zoom out ");
+			topButton("hgt.out1", ZOOM_1PT5X);
+			topButton("hgt.out2", ZOOM_3X);
+			topButton("hgt.out3", ZOOM_10X);
+			hWrites("<BR>\n");
 #endif//ndef USE_NAVIGATION_LINKS
 
-		//hPrintf("<INPUT TYPE=HIDDEN id='positionHidden' NAME=\"position\" "
-		//	"VALUE=\"%s:%d-%d\">", chromName, winStart+1, winEnd);
+			//hPrintf("<INPUT TYPE=HIDDEN id='positionHidden' NAME=\"position\" "
+			//	"VALUE=\"%s:%d-%d\">", chromName, winStart+1, winEnd);
 
-		if(CBIsInBrowser) {
-			if (showTrackControls)
-			{
-				hPrintf("<INPUT TYPE=HIDDEN id='positionHidden' NAME=\"position\" "
-					"VALUE=\"%s:%d-%d\">", chromName, winStart+1, winEnd);
-				hPrintf("\n%s", trackGroupsHidden1->string);
-				//hPrintf("\n<!--%s-->", trackGroupsHidden1->string);
-				hButton("hgTracksConfigPage", "configure");
-				// info for drag selection javascript
-				hPrintf("<input type='hidden' id='hgt.winStart' name='winStart' value='%d'>\n", winStart);
-				hPrintf("<input type='hidden' id='hgt.winEnd' name='winEnd' value='%d'>\n", winEnd);
-				hPrintf("<input type='hidden' id='hgt.chromName' name='chromName' value='%s'>\n", chromName);
-
-				hButton("hgt.refresh", "refresh");
-				hPutc('\n');
-				hPrintf("</div></CENTER></FORM>\n");
-				hPrintf("<FORM ACTION=\"%s\" NAME=\"TrackForm\" id=\"TrackForm\" METHOD=\"POST\">\n\n", hgTracksName());
-				hPrintf("%s", trackGroupsHidden2->string);
-				freeDyString(&trackGroupsHidden1);
-				freeDyString(&trackGroupsHidden2);
-				if (!psOutput) cartSaveSession(cart);   /* Put up hgsid= as hidden variable. */
-				hPrintf("<CENTER>");
-			}
-
-		} else {
-			if (showTrackControls)
-			{
-				/* Break into a second form so that zooming and scrolling
-				* can be done with a 'GET' so that user can back up from details
-				* page without Internet Explorer popping up an annoying dialog.
-				* Do rest of page as a 'POST' so that the ultra-long URL from
-				* all the track controls doesn't break things.  IE URL limit
-				* is 2000 bytes, but some firewalls impose a ~1000 byte limit.
-				* As a side effect of breaking up the page into two forms
-				* we need to repeat the position in a hidden variable here
-				* so that zoom/scrolling always has current position to work
-				* from. */
-				hPrintf("<INPUT TYPE=HIDDEN id='positionHidden' NAME=\"position\" "
-					"VALUE=\"%s:%d-%d\">", chromName, winStart+1, winEnd);
-				hPrintf("\n%s", trackGroupsHidden1->string);
-				//hPrintf("\n<!--%s-->", trackGroupsHidden1->string);
-				hPrintf("</div></CENTER></FORM>\n");
-				hPrintf("<FORM ACTION=\"%s\" NAME=\"TrackForm\" id=\"TrackForm\" METHOD=\"POST\">\n\n", hgTracksName());
-				hPrintf("%s", trackGroupsHidden2->string);
-				freeDyString(&trackGroupsHidden1);
-				freeDyString(&trackGroupsHidden2);
-				if (!psOutput) cartSaveSession(cart);   /* Put up hgsid= as hidden variable. */
-				clearButtonJavascript = "document.TrackForm.position.value=''; document.getElementById('suggest').value='';";
-				hPrintf("<CENTER>");
-			}
-
-
-			/* Make line that says position. */
-			{
-				char buf[256];
-				char *survey = cfgOptionEnv("HGDB_SURVEY", "survey");
-				char *surveyLabel = cfgOptionEnv("HGDB_SURVEY_LABEL", "surveyLabel");
-				char *javascript = "onchange=\"document.location = '/cgi-bin/hgTracks?db=' + document.TrackForm.db.options[document.TrackForm.db.selectedIndex].value;\"";
-				if (containsStringNoCase(database, "zoo"))
+			if(CBIsInBrowser) {
+				if (showTrackControls)
 				{
-					hPuts("Organism ");
-					printAssemblyListHtmlExtra(database, javascript);
+					hPrintf("<INPUT TYPE=HIDDEN id='positionHidden' NAME=\"position\" "
+						"VALUE=\"%s:%d-%d\">", chromName, winStart+1, winEnd);
+					hPrintf("\n%s", trackGroupsHidden1->string);
+					//hPrintf("\n<!--%s-->", trackGroupsHidden1->string);
+					hButton("hgTracksConfigPage", "configure");
+					// info for drag selection javascript
+					hPrintf("<input type='hidden' id='hgt.winStart' name='winStart' value='%d'>\n", winStart);
+					hPrintf("<input type='hidden' id='hgt.winEnd' name='winEnd' value='%d'>\n", winEnd);
+					hPrintf("<input type='hidden' id='hgt.chromName' name='chromName' value='%s'>\n", chromName);
+
+					hButton("hgt.refresh", "refresh");
+					hPutc('\n');
+					hPrintf("</div></CENTER></FORM>\n");
+					hPrintf("<FORM ACTION=\"%s\" NAME=\"TrackForm\" id=\"TrackForm\" METHOD=\"POST\">\n\n", hgTracksName());
+					hPrintf("%s", trackGroupsHidden2->string);
+					freeDyString(&trackGroupsHidden1);
+					freeDyString(&trackGroupsHidden2);
+					if (!psOutput) cartSaveSession(cart);   /* Put up hgsid= as hidden variable. */
+					hPrintf("<CENTER>");
 				}
 
-				sprintf(buf, "%s:%d-%d", chromName, winStart+1, winEnd);
-				position = cloneString(buf);
-				hWrites("position/search ");
-				hTextVar("position", addCommasToPos(database, position), 30);
-				sprintLongWithCommas(buf, winEnd - winStart);
-				if(dragZooming && assemblySupportsGeneSuggest(database))
-					hWrites(" <a title='click for help on gene search box' target='_blank' href='../goldenPath/help/geneSearchBox.html'>gene</a> <input type='text' size='8' name='hgt.suggest' id='suggest'>\n");
-				hWrites(" ");
-				hButtonWithOnClick("hgt.jump", "jump", NULL, "jumpButtonOnClick()");
-				hOnClickButton(clearButtonJavascript,"clear");
-				hPrintf(" size <span id='size'>%s</span> bp. ", buf);
-				hWrites(" ");
+			} else {
+				if (showTrackControls)
+				{
+					/* Break into a second form so that zooming and scrolling
+					* can be done with a 'GET' so that user can back up from details
+					* page without Internet Explorer popping up an annoying dialog.
+					* Do rest of page as a 'POST' so that the ultra-long URL from
+					* all the track controls doesn't break things.  IE URL limit
+					* is 2000 bytes, but some firewalls impose a ~1000 byte limit.
+					* As a side effect of breaking up the page into two forms
+					* we need to repeat the position in a hidden variable here
+					* so that zoom/scrolling always has current position to work
+					* from. */
+					hPrintf("<INPUT TYPE=HIDDEN id='positionHidden' NAME=\"position\" "
+						"VALUE=\"%s:%d-%d\">", chromName, winStart+1, winEnd);
+					hPrintf("\n%s", trackGroupsHidden1->string);
+					//hPrintf("\n<!--%s-->", trackGroupsHidden1->string);
+					hPrintf("</div></CENTER></FORM>\n");
+					hPrintf("<FORM ACTION=\"%s\" NAME=\"TrackForm\" id=\"TrackForm\" METHOD=\"POST\">\n\n", hgTracksName());
+					hPrintf("%s", trackGroupsHidden2->string);
+					freeDyString(&trackGroupsHidden1);
+					freeDyString(&trackGroupsHidden2);
+					if (!psOutput) cartSaveSession(cart);   /* Put up hgsid= as hidden variable. */
+					clearButtonJavascript = "document.TrackForm.position.value=''; document.getElementById('suggest').value='';";
+					hPrintf("<CENTER>");
+				}
 
-				hButton("hgTracksConfigPage", "configure");
-				//hPrintf("&nbsp;&nbsp;<FONT SIZE=3><A STYLE=\"text-decoration:none; padding:2px; background-color:yellow; border:solid 1px\" HREF=\"http://www.surveymonkey.com/s.asp?u=881163743177\" TARGET=_BLANK><EM><B>Your feedback</B></EM></A></FONT>\n");
-				if (survey && differentWord(survey, "off"))
-					hPrintf("&nbsp;&nbsp;<FONT SIZE=3><A STYLE=\"background-color:yellow;\" HREF=\"%s\" TARGET=_BLANK><EM><B>%s</B></EM></A></FONT>\n", survey, surveyLabel ? surveyLabel : "Take survey");
-				// info for drag selection javascript
-				hPrintf("<input type='hidden' id='hgt.winStart' name='winStart' value='%d'>\n", winStart);
-				hPrintf("<input type='hidden' id='hgt.winEnd' name='winEnd' value='%d'>\n", winEnd);
-				hPrintf("<input type='hidden' id='hgt.chromName' name='chromName' value='%s'>\n", chromName);
 
-				hPutc('\n');
+				/* Make line that says position. */
+				{
+					char buf[256];
+					char *survey = cfgOptionEnv("HGDB_SURVEY", "survey");
+					char *surveyLabel = cfgOptionEnv("HGDB_SURVEY_LABEL", "surveyLabel");
+					char *javascript = "onchange=\"document.location = '/cgi-bin/hgTracks?db=' + document.TrackForm.db.options[document.TrackForm.db.selectedIndex].value;\"";
+					if (containsStringNoCase(database, "zoo"))
+					{
+						hPuts("Organism ");
+						printAssemblyListHtmlExtra(database, javascript);
+					}
 
+					sprintf(buf, "%s:%d-%d", chromName, winStart+1, winEnd);
+					position = cloneString(buf);
+					hWrites("position/search ");
+					hTextVar("position", addCommasToPos(database, position), 30);
+					sprintLongWithCommas(buf, winEnd - winStart);
+					if(dragZooming && assemblySupportsGeneSuggest(database))
+						hWrites(" <a title='click for help on gene search box' target='_blank' href='../goldenPath/help/geneSearchBox.html'>gene</a> <input type='text' size='8' name='hgt.suggest' id='suggest'>\n");
+					hWrites(" ");
+					hButtonWithOnClick("hgt.jump", "jump", NULL, "jumpButtonOnClick()");
+					hOnClickButton(clearButtonJavascript,"clear");
+					hPrintf(" size <span id='size'>%s</span> bp. ", buf);
+					hWrites(" ");
+
+					hButton("hgTracksConfigPage", "configure");
+					//hPrintf("&nbsp;&nbsp;<FONT SIZE=3><A STYLE=\"text-decoration:none; padding:2px; background-color:yellow; border:solid 1px\" HREF=\"http://www.surveymonkey.com/s.asp?u=881163743177\" TARGET=_BLANK><EM><B>Your feedback</B></EM></A></FONT>\n");
+					if (survey && differentWord(survey, "off"))
+						hPrintf("&nbsp;&nbsp;<FONT SIZE=3><A STYLE=\"background-color:yellow;\" HREF=\"%s\" TARGET=_BLANK><EM><B>%s</B></EM></A></FONT>\n", survey, surveyLabel ? surveyLabel : "Take survey");
+					// info for drag selection javascript
+					hPrintf("<input type='hidden' id='hgt.winStart' name='winStart' value='%d'>\n", winStart);
+					hPrintf("<input type='hidden' id='hgt.winEnd' name='winEnd' value='%d'>\n", winEnd);
+					hPrintf("<input type='hidden' id='hgt.chromName' name='chromName' value='%s'>\n", chromName);
+
+					hPutc('\n');
+
+				}
 			}
 		}
-	}
 
-	/* Make chromsome ideogram gif and map. */
-	makeChromIdeoImage(&trackList, psOutput, ideoTn);
+		/* Make chromsome ideogram gif and map. */
+		makeChromIdeoImage(&trackList, psOutput, ideoTn);
 
 #ifdef USE_NAVIGATION_LINKS
-	hPrintf("<TABLE BORDER=0 CELLPADDING=0 width='%d'><tr style='font-size:small;'>\n",tl.picWidth);//min(tl.picWidth, 800));
-	hPrintf("<td width='40' align='left'><a href='?hgt.left3=1' title='move 95&#37; to the left'>&lt;&lt;&lt;</a>\n");
-	hPrintf("<td width='30' align='left'><a href='?hgt.left2=1' title='move 47.5&#37; to the left'>&lt;&lt;</a>\n");
+		hPrintf("<TABLE BORDER=0 CELLPADDING=0 width='%d'><tr style='font-size:small;'>\n",tl.picWidth);//min(tl.picWidth, 800));
+		hPrintf("<td width='40' align='left'><a href='?hgt.left3=1' title='move 95&#37; to the left'>&lt;&lt;&lt;</a>\n");
+		hPrintf("<td width='30' align='left'><a href='?hgt.left2=1' title='move 47.5&#37; to the left'>&lt;&lt;</a>\n");
 #ifdef IMAGEv2_DRAG_SCROLL
-	if(!advancedJavascriptFeaturesEnabled(cart))
+		if(!advancedJavascriptFeaturesEnabled(cart))
 #endif//def IMAGEv2_DRAG_SCROLL
-		hPrintf("<td width='20' align='left'><a href='?hgt.left1=1' title='move 10&#37; to the left'>&lt;</a>\n");
+			hPrintf("<td width='20' align='left'><a href='?hgt.left1=1' title='move 10&#37; to the left'>&lt;</a>\n");
 
-	hPrintf("<td>&nbsp;</td>\n"); // Without 'width=' this cell expand to table with, forcing other cells to the sides.
-	hPrintf("<td width='40' align='left'><a href='?hgt.in1=1' title='zoom in 1.5x'>&gt;&nbsp;&lt;</a>\n");
-	hPrintf("<td width='60' align='left'><a href='?hgt.in2=1' title='zoom in 3x'>&gt;&gt;&nbsp;&lt;&lt;</a>\n");
-	hPrintf("<td width='80' align='left'><a href='?hgt.in3=1' title='zoom in 10x'>&gt;&gt;&gt;&nbsp;&lt;&lt;&lt;</a>\n");
-	hPrintf("<td width='40' align='left'><a href='?hgt.inBase=1' title='zoom in to base range'>&gt;<i>base</i>&lt;</a>\n");
+		hPrintf("<td>&nbsp;</td>\n"); // Without 'width=' this cell expand to table with, forcing other cells to the sides.
+		hPrintf("<td width='40' align='left'><a href='?hgt.in1=1' title='zoom in 1.5x'>&gt;&nbsp;&lt;</a>\n");
+		hPrintf("<td width='60' align='left'><a href='?hgt.in2=1' title='zoom in 3x'>&gt;&gt;&nbsp;&lt;&lt;</a>\n");
+		hPrintf("<td width='80' align='left'><a href='?hgt.in3=1' title='zoom in 10x'>&gt;&gt;&gt;&nbsp;&lt;&lt;&lt;</a>\n");
+		hPrintf("<td width='40' align='left'><a href='?hgt.inBase=1' title='zoom in to base range'>&gt;<i>base</i>&lt;</a>\n");
 
-	hPrintf("<td>&nbsp;</td>\n"); // Without 'width=' this cell expand to table with, forcing other cells to the sides.
-	hPrintf("<td width='40' align='right'><a href='?hgt.out1=1' title='zoom out 1.5x'>&lt;&nbsp;&gt;</a>\n");
-	hPrintf("<td width='60' align='right'><a href='?hgt.out2=1' title='zoom out 3x'>&lt;&lt;&nbsp;&gt;&gt;</a>\n");
-	hPrintf("<td width='80' align='right'><a href='?hgt.out3=1' title='zoom out 10x'>&lt;&lt;&lt;&nbsp;&gt;&gt;&gt;</a>\n");
-	hPrintf("<td>&nbsp;</td>\n"); // Without 'width=' this cell expand to table with, forcing other cells to the sides.
+		hPrintf("<td>&nbsp;</td>\n"); // Without 'width=' this cell expand to table with, forcing other cells to the sides.
+		hPrintf("<td width='40' align='right'><a href='?hgt.out1=1' title='zoom out 1.5x'>&lt;&nbsp;&gt;</a>\n");
+		hPrintf("<td width='60' align='right'><a href='?hgt.out2=1' title='zoom out 3x'>&lt;&lt;&nbsp;&gt;&gt;</a>\n");
+		hPrintf("<td width='80' align='right'><a href='?hgt.out3=1' title='zoom out 10x'>&lt;&lt;&lt;&nbsp;&gt;&gt;&gt;</a>\n");
+		hPrintf("<td>&nbsp;</td>\n"); // Without 'width=' this cell expand to table with, forcing other cells to the sides.
 #ifdef IMAGEv2_DRAG_SCROLL
-	if(!advancedJavascriptFeaturesEnabled(cart))
+		if(!advancedJavascriptFeaturesEnabled(cart))
 #endif//ndef IMAGEv2_DRAG_SCROLL
-		hPrintf("<td width='20' align='right'><a href='?hgt.right1=1' title='move 10&#37; to the right'>&gt;</a>\n");
+			hPrintf("<td width='20' align='right'><a href='?hgt.right1=1' title='move 10&#37; to the right'>&gt;</a>\n");
 
-	hPrintf("<td width='30' align='right'><a href='?hgt.right2=1' title='move 47.5&#37; to the right'>&gt;&gt;</a>\n");
-	hPrintf("<td width='40' align='right'><a href='?hgt.right3=1' title='move 95&#37; to the right'>&gt;&gt;&gt;</a>\n");
-	hPrintf("</tr></table>\n");
+		hPrintf("<td width='30' align='right'><a href='?hgt.right2=1' title='move 47.5&#37; to the right'>&gt;&gt;</a>\n");
+		hPrintf("<td width='40' align='right'><a href='?hgt.right3=1' title='move 95&#37; to the right'>&gt;&gt;&gt;</a>\n");
+		hPrintf("</tr></table>\n");
 #endif//def USE_NAVIGATION_LINKS
 
-	/* Make clickable image and map. */
-	makeActiveImage(trackList, psOutput);
-	fflush(stdout);
+		/* Make clickable image and map. */
+		makeActiveImage(trackList, psOutput);
+		fflush(stdout);
 
 		if(trackImgOnly)
 			// bail out b/c we are done
@@ -5129,6 +5164,117 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 						continue;
 
 				trackSeriesName = trackDbSetting(track->tdb, "compSeries");
+				if(trackSeriesName != NULL) {
+					// linked throughout the species
+					continue;
+				}
+
+				if (hTrackOnChrom(track->tdb, chromName))
+				{
+					if (tdbIsSuper(track->tdb)) {
+						/* determine if supertrack is show/hide */
+						char *setting =
+							cartUsualString(cart, track->tdb->track, track->tdb->isShow ? "show" : "hide");
+						if (sameString("show", setting) || sameString("dense", setting))
+							show = TRUE;
+
+					} else {
+						/* check for option of limiting visibility to one mode */
+						show = !(track->visibility == tvHide);
+					}
+				}
+				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", track->shortLabel, track->track,
+					show? "dense": "hide");
+			}
+
+		}
+		hPrintf("</DIV>\n");
+
+		hPrintf("<DIV STYLE=\"display:none;\" id=\"TrackControlsEncode\">\n");
+
+		for (group = groupList; group != NULL; group = group->next)
+		{
+			if (group->trackList == NULL)
+				continue;
+			if (differentString(group->name, "encode")) {
+				// Only encode specific tracks needs to be done here
+				continue;
+			}
+
+			struct trackRef *tr;
+
+			/* Display track controls */
+			for (tr = group->trackList; tr != NULL; tr = tr->next)
+			{
+				// HACK: run this twice, the first time only tracks belonging to a multi-species series is shown
+				//			to have a hidden input value
+				struct track *track = tr->track;
+				char *trackSeriesName;
+
+				// TODO: META INFO
+				//			currently the only meta info needed for common tracks is sample type
+				//			may add other meta info here if needed
+				char *trackSampleType, *trackDataType, *trackFeature;
+				boolean show = FALSE;
+				if (tdbIsSuperTrackChild(track->tdb))
+					/* don't display supertrack members */
+						continue;
+
+				trackSeriesName = trackDbSetting(track->tdb, "compSeries");
+				if(trackSeriesName == NULL) {
+					// not linked throughout the species
+					continue;
+				}
+				
+				trackSampleType = trackDbSetting(track->tdb, "groupSampleType");
+				trackDataType = trackDbSetting(track->tdb, "groupDataType");
+				trackFeature = trackDbSetting(track->tdb, "groupFeature");
+
+				if (hTrackOnChrom(track->tdb, chromName))
+				{
+					if (tdbIsSuper(track->tdb)) {
+						/* determine if supertrack is show/hide */
+						char *setting =
+							cartUsualString(cart, track->tdb->track, track->tdb->isShow ? "show" : "hide");
+						if (sameString("show", setting) || sameString("dense", setting))
+							show = TRUE;
+
+					} else {
+						/* check for option of limiting visibility to one mode */
+						show = !(track->visibility == tvHide);
+					}
+				}
+				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", trackSeriesName, track->track,
+					show? "dense": "hide");
+				if(trackFeature != NULL) {
+					hPrintf("<span id=\"%s_title\">%s (%s)</span>\n", trackSeriesName, trackDataType, trackFeature);
+					hPrintf("<span id=\"%s_data\">%s</span>\n", trackSeriesName, trackSampleType);
+				} else {
+					if(trackSampleType != NULL) {
+						hPrintf("<span id=\"%s_title\">%s</span>\n", trackSeriesName, trackDataType);
+						hPrintf("<span id=\"%s_data\">%s</span>\n", trackSeriesName, trackSampleType);
+					} else {
+						hPrintf("<span id=\"%s_title\">%s</span>\n", trackSeriesName, trackDataType);
+						hPrintf("<span id=\"%s_data\"><em>N/A</em></span>\n", trackSeriesName);
+					}
+				}
+			}
+
+			hPrintf("</DIV><DIV STYLE=\"display:none\" id=\"TrackUniqueEncode\">\n");
+
+			/* Display track controls */
+			for (tr = group->trackList; tr != NULL; tr = tr->next)
+			{
+				// HACK: This is the second time
+				struct track *track = tr->track;
+				char *trackSeriesName;
+
+				// TODO: META INFO
+				//			currently the only meta info needed for common tracks is sample type
+				//			may add other meta info here if needed
+				char *trackSampleType, *trackLabName, *trackDataType;
+				boolean show = FALSE;
+				if (sameString(track->tdb->track, "multishade")) {
 					continue;
 				}
 				if (tdbIsSuperTrackChild(track->tdb))
