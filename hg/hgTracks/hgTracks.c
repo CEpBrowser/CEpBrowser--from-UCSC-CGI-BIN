@@ -5272,7 +5272,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				// TODO: META INFO
 				//			currently the only meta info needed for common tracks is sample type
 				//			may add other meta info here if needed
-				char *trackSampleType, *trackLabName, *trackDataType;
+				char *trackSampleType, *trackLabName, *trackDataType, *trackFeature;
 				boolean show = FALSE;
 				if (sameString(track->tdb->track, "multishade")) {
 					continue;
