@@ -1,8 +1,3 @@
-# (XC) if building private cgi
-ifeq (${PRIVATE_CGI},1)
-  CFLAGS += -DPRIVATE_CGI
-endif
-
 # Build all directories in utils
 
 # 	$Id: makefile,v 1.156 2010/03/03 02:53:30 markd Exp $

@@ -872,7 +872,7 @@ struct grp *findSelectedGroup(struct grp *groupList, char *cgiVar)
 /* Find user-selected group if possible.  If not then
  * go to various levels of defaults. */
 {
-char *defaultGroup = "lab";
+char *defaultGroup = "genes";
 char *name = cartUsualString(cart, cgiVar, defaultGroup);
 struct grp *group = findGroup(groupList, name);
 if (group == NULL)

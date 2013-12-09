@@ -10,14 +10,6 @@ HG_INC=-I../inc -I../../inc -I../../../inc -I../../../../inc -I../../../../../in
 #global external libraries 
 L=
 
-# (XC) if building private cgi
-#ifeq (${PRIVATE_CGI},1)
-#  CFLAGS += -DPRIVATE_CGI
-CGI_BIN=/cgi-bin
-#else
-#  CGI_BIN=/cgi-bin-public
-#endif
-
 # autodetect if openssl is installed
 ifeq (${SSLDIR},)
   SSLDIR = /usr/include/openssl
