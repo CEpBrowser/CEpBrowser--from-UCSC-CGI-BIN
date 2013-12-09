@@ -1,2 +1,0 @@
-Stable version for UCSC Genome Browser and CEpBrowser, including makefile.
-

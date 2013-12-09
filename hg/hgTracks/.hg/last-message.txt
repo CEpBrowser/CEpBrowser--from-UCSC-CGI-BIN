@@ -1,2 +1,0 @@
-Stable version for UCSC genome browser and CEpBrowser
-
