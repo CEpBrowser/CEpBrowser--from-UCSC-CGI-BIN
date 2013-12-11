@@ -5272,7 +5272,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				// TODO: META INFO
 				//			currently the only meta info needed for common tracks is sample type
 				//			may add other meta info here if needed
-				char *trackSampleType, *trackLabName, *trackDataType, *trackFeature;
+				char *trackSampleType, *trackLabName, *trackDataType, *trackFeature, *trackID;
 				boolean show = FALSE;
 				if (sameString(track->tdb->track, "multishade")) {
 					continue;
@@ -5291,6 +5291,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				trackLabName = trackDbSetting(track->tdb, "labName");
 				trackDataType = trackDbSetting(track->tdb, "dataType");
 				trackFeature = trackDbSetting(track->tdb, "trackFeature");
+				trackID = trackDbSetting(track->tdb, "trackID");
 
 				if (hTrackOnChrom(track->tdb, chromName))
 				{
@@ -5306,17 +5307,17 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 						show = !(track->visibility == tvHide);
 					}
 				}
-				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", track->shortLabel, track->track,
+				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", trackID, track->track,
 					show? "dense": "hide");
 				if(trackFeature != NULL) {
-					hPrintf("<span id=\"%s_title\">%s (%s)</span>\n", track->shortLabel, trackFeature, trackDataType);
+					hPrintf("<span id=\"%s_title\">%s (%s)</span>\n", trackID, trackDataType, trackFeature);
 				} else {
-					hPrintf("<span id=\"%s_title\">%s</span>\n", track->shortLabel, trackDataType);
+					hPrintf("<span id=\"%s_title\">%s</span>\n", trackID, trackDataType);
 				}
 				if(trackSampleType != NULL) {
-					hPrintf("<span id=\"%s_data\">%s\t%s</span>\n", track->shortLabel, trackSampleType, trackLabName);
+					hPrintf("<span id=\"%s_data\">%s\t%s</span>\n", trackID, trackSampleType, trackLabName);
 				} else {
-					hPrintf("<span id=\"%s_data\"><em>N/A</em>\t%s</span>\n", track->shortLabel, trackLabName);
+					hPrintf("<span id=\"%s_data\"><em>N/A</em>\t%s</span>\n", trackID, trackLabName);
 				}
 			}
 
