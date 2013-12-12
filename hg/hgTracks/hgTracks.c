@@ -5326,7 +5326,10 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 
 
 	}
-	hPrintf("</CENTER>\n");
+
+	if (!hgControlOnly) {
+		hPrintf("</CENTER>\n");
+	}
 
 #ifdef SLOW
 	/* We'll rely on the end of program to do the cleanup.
