@@ -846,7 +846,6 @@ struct wigCartOptions *wigCart)
 			*	are below the lower graphing limit.  This is OK, the
 			*	clipping will be taken care of by the vgBox() function.
 			*/
-
 			if (vis == tvFull || vis == tvPack)
 			{
 #define scaleHeightToPixels(val) (min(BIGNUM,(scaleFactor * (graphUpperLimit - (val)) + yOff)))

@@ -267,7 +267,13 @@ void bedGraphMethods(struct track *track, struct trackDb *tdb,
 	track->itemEnd = tgItemNoEnd;
 	track->mapsSelf = TRUE;
 	track->extraUiData = (void *) wigCart;
+	// Hacked: using transparency gradients
+#ifdef COLOR32
+	track->colorShades = shadesOfTransparency;
+#else
 	track->colorShades = shadesOfGray;
+#endif
+	// End hack
 	track->drawLeftLabels = wigLeftLabels;
 	/*	the lfSubSample type makes the image map function correctly */
 	track->subType = lfSubSample;     /*make subType be "sample" (=2)*/
