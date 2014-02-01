@@ -1,0 +1,141 @@
+This file is used to explain the detailed bigWig format. Every segment will be enclosed with ===== and the offset (if fixed) with it.
+
+===== BigWig Header Begin ===== (0x00000000)
+0x00 - 0x03		4B		Magic number (bigWig = 0x888FFC26)
+0x04 - 0x05		2B		Version (currently = 0x0004h for bigWig)
+0x06 - 0x07		2B		Zoom levels
+0x08 - 0x0F		8B		Chrom tree (map chrom name to ID and sizes) offset
+0x10 - 0x17		8B		Unzoomed data offset
+0x18 - 0x1F		8B		Unzoomed index offset
+0x20 - 0x21		2B		Field count (probably used in BigBed)
+0x22 - 0x23		2B		Defined field count
+0x24 - 0x2B		8B		As offset
+0x2C - 0x33		8B		Total summary offset
+0x34 - 0x37		4B		Uncompress buffer size (appears to = 0x8000 = 32768)
+0x38 - 0x3F		8B		(Reserved)
+===== BigWig Header End ===== (0x0000003F)
+
+===== Zoom Level Header Begin =====
+(Immediately after BigWig Header, IN REVERSE ORDER to the memory)
+0x00 - 0x03		4B		Reduction level
+0x04 - 0x07		4B		(Reserved)
+0x08 - 0x0F		8B		Data offset
+0x10 - 0x17		8B		Index offset
+===== Zoom Level Header End =====
+(Followed by the next Zoom Header, until there are none)
+
+===== Total Summary Header Begin ===== (Total summary offset)
+0x00 - 0x07		8B		Valid count
+0x08 - 0x0F		8B		Minimum value (double)
+0x10 - 0x17		8B		Maximum value (double)
+0x18 - 0x1F		8B		Sum of data (double)
+0x20 - 0x27		8B		Sum of square of data (double)
+===== Total Summary Header End =====
+
+===== Chrom Tree Header Begin ===== (Chrom tree offset) (bbi->chromBpt in Code)
+(Chrom tree is a B+ tree storing chromosome name, ID and size)
+0x00 - 0x03		4B		Magic number (B+ tree = 0x78CA8C91)
+0x04 - 0x07		4B		Block size (for Chrom Tree = 0x15 = 21)
+0x08 - 0x0B		4B		Key size (for Chrom Tree = 0x05)
+0x0C - 0x0F		4B		Value size (for Chrom Tree = 0x08)
+0x10 - 0x17		8B		Item count (long long)
+0x18 - 0x1F		8B		(Reserved)
+===== Chrom Tree Header End =====
+(After header, the immediate offset is stored as Root Offset.)
+
+===== Chrom Tree Node Begin =====
+(This immediately follows Chrom Tree Header at Root Offset)
+0x00			1B		Whether node is leaf
+0x01			1B		(Reserved)
+0x02 - 0x03		2B		Child count
+(This is followed by all childs)
+
+== Node Child Begin ==
+0x00 - 0x04		5B		Chrom Key
+-- Node Value Begin (struct bbiChromInfo) --
+0x05 - 0x08		4B		Chrom ID (long)
+0x09 - 0x0C		4B		Chrom size (long)
+-- Node Value End (struct bbiChromInfo) --
+== Node Child End ==
+
+===== Unzoomed Index Header Begin ===== (Unzoomed Index Offset)
+(Index file is a cirTree, extension of R-tree for all data)
+0x00 - 0x03		4B		Magic number (cirTree = 0x2468ACE0)
+0x04 - 0x07		4B		Block size (seems like for cirTree = 0x0100 = 256)
+0x08 - 0x0F		8B		Item count (long long)
+0x10 - 0x13		4B		Start chrom ID (long)
+0x14 - 0x17		4B		Start base (long)
+0x18 - 0x1B		4B		End chrom ID (long)
+0x1C - 0x1F		4B		End base (long)
+0x20 - 0x27		8B		File size (long long)
+0x28 - 0x2B		4B		Items per slot (long)
+0x2C - 0x2F		4B		(Reserved)
+===== Unzoomed Index Header End =====
+
+===== Unzoomed Index Node Begin =====
+(This immediately follows the Index header)
+0x00			1B		Whether node is leaf
+0x01			1B		(Reserved)
+0x02 - 0x03		2B		Child count
+(This is immediately followed by child)
+
+== Node Child Begin ==
+0x00 - 0x03		4B		Start chrom ID (long)
+0x04 - 0x07		4B		Start base (long)
+0x08 - 0x0B		4B		End chrom ID (long)
+0x0C - 0x0F		4B		End base (long)
+0x10 - 0x17		8B		Offset 
+(if node is leaf, the offset directly points to data,
+ otherwise it points to child nodes)
+0x18 - 0x1F		8B		Size (LEAF NODE ONLY)
+== Node Child End ==
+
+===== Data Block Header Begin =====
+(Data are compressed with zlib, 
+ therefore, the uncompressed stuff is actually in memory)
+0x00 - 0x03		4B		Chrom ID (long)
+0x04 - 0x07		4B		Start base (long)
+0x08 - 0x0B		4B		End base (long)
+0x0C - 0x0F		4B		Item step (long)
+0x10 - 0x13		4B		Item span (long)
+0x14			1B		Type (char, bedGraph = 1, variableStep = 2, fixedStep = 3)
+0x15			1B		(Reserved)
+0x16 - 0x17		2B		Item count (int)
+===== Data Block Header End =====
+(This is immediately followed by data)
+
+===== Data Block Content =====
+----- Type = 1, bedGraph -----
+0x00 - 0x03		4B		Start (long)
+0x04 - 0x07		4B		End (long)
+0x08 - 0x0B		4B		Value (float)
+----- Type = 1 End -----
+
+----- Type = 2, variableStep -----
+0x00 - 0x03		4B		Start (long)
+(End = Start + Item span)
+0x04 - 0x07		4B		Value (float)
+----- Type = 2 End -----
+
+----- Type = 3, fixedStep -----
+(Start = Previous Start + Item step)
+(End = Previous End + Item step = Start + Item span)
+0x00 - 0x03		4B		Value (float)
+----- Type = 3 End -----
+===== Data Block Content End =====
+
+===== Zoomed Index =====
+(Should be the same as unzoomed Index)
+
+
+===== Zoomed Summary Data Begin =====
+(Data are compressed with zlib therefore actually in memory)
+0x00 - 0x03		4B		Chrom ID (long)
+0x04 - 0x07		4B		Start (long)
+0x08 - 0x0B		4B		End (long)
+0x0C - 0x0F		4B		Valid count (long)
+0x10 - 0x13		4B		Min value (float)
+0x14 - 0x17		4B		Max value (float)
+0x18 - 0x1B		4B		Sum of data (float)
+0x1C - 0x1F		4B		Sum of squares (float)
+===== Zoomed Summary Data End =====
