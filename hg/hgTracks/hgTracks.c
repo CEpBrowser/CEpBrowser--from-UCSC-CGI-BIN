@@ -5099,6 +5099,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 		// Hack: provide divs for hidden controls, also sort out such stuff
 		// Due to the control method, everything is written as hidden
 		hPrintf("<DIV STYLE=\"display:none;\" id=\"TrackControls\">\n");
+		char trackID[255], *ch;
 
 		for (group = groupList; group != NULL; group = group->next)
 		{
@@ -5129,6 +5130,13 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 					continue;
 				}
 
+				sprintf(trackID, "%s", trackSeriesName);
+				for(ch = trackID; ch < trackID + 255 && *ch; ch++) {
+					if(*ch == ' ' || *ch == '(' || *ch == ')') {
+						*ch = '_';
+					}
+				}
+
 				if (hTrackOnChrom(track->tdb, chromName))
 				{
 					if (tdbIsSuper(track->tdb)) {
@@ -5143,7 +5151,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 						show = !(track->visibility == tvHide);
 					}
 				}
-				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", trackSeriesName, track->track,
+				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", trackID, track->track,
 					show? "dense": "hide");
 			}
 
@@ -5169,6 +5177,13 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 					continue;
 				}
 
+				sprintf(trackID, "%s", track->shortLabel);
+				for(ch = trackID; ch < trackID + 255 && *ch; ch++) {
+					if(*ch == ' ' || *ch == '(' || *ch == ')') {
+						*ch = '_';
+					}
+				}
+
 				if (hTrackOnChrom(track->tdb, chromName))
 				{
 					if (tdbIsSuper(track->tdb)) {
@@ -5183,7 +5198,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 						show = !(track->visibility == tvHide);
 					}
 				}
-				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", track->shortLabel, track->track,
+				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", trackID, track->track,
 					show? "dense": "hide");
 			}
 
@@ -5226,6 +5241,13 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 					continue;
 				}
 				
+				sprintf(trackID, "%s", trackSeriesName);
+				for(ch = trackID; ch < trackID + 255 && *ch; ch++) {
+					if(*ch == ' ' || *ch == '(' || *ch == ')') {
+						*ch = '_';
+					}
+				}
+
 				trackSampleType = trackDbSetting(track->tdb, "groupSampleType");
 				trackDataType = trackDbSetting(track->tdb, "groupDataType");
 				trackFeature = trackDbSetting(track->tdb, "groupFeature");
@@ -5244,18 +5266,18 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 						show = !(track->visibility == tvHide);
 					}
 				}
-				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", trackSeriesName, track->track,
+				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", trackID, track->track,
 					show? "dense": "hide");
 				if(trackFeature != NULL) {
-					hPrintf("<span id=\"%s_title\">%s (%s)</span>\n", trackSeriesName, trackDataType, trackFeature);
-					hPrintf("<span id=\"%s_data\">%s</span>\n", trackSeriesName, trackSampleType);
+					hPrintf("<span id=\"%s_title\">%s (%s)</span>\n", trackID, trackDataType, trackFeature);
+					hPrintf("<span id=\"%s_data\">%s</span>\n", trackID, trackSampleType);
 				} else {
 					if(trackSampleType != NULL) {
-						hPrintf("<span id=\"%s_title\">%s</span>\n", trackSeriesName, trackDataType);
-						hPrintf("<span id=\"%s_data\">%s</span>\n", trackSeriesName, trackSampleType);
+						hPrintf("<span id=\"%s_title\">%s</span>\n", trackID, trackDataType);
+						hPrintf("<span id=\"%s_data\">%s</span>\n", trackID, trackSampleType);
 					} else {
-						hPrintf("<span id=\"%s_title\">%s</span>\n", trackSeriesName, trackDataType);
-						hPrintf("<span id=\"%s_data\"><em>N/A</em></span>\n", trackSeriesName);
+						hPrintf("<span id=\"%s_title\">%s</span>\n", trackID, trackDataType);
+						hPrintf("<span id=\"%s_data\"><em>N/A</em></span>\n", trackID);
 					}
 				}
 			}
@@ -5272,7 +5294,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				// TODO: META INFO
 				//			currently the only meta info needed for common tracks is sample type
 				//			may add other meta info here if needed
-				char *trackSampleType, *trackLabName, *trackDataType, *trackFeature, *trackID;
+				char *trackSampleType, *trackLabName, *trackDataType, *trackFeature;
 				boolean show = FALSE;
 				if (sameString(track->tdb->track, "multishade")) {
 					continue;
@@ -5287,11 +5309,24 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 					continue;
 				}
 
+				sprintf(trackID, "%s", track->shortLabel);
+				for(ch = trackID; ch < trackID + 255 && *ch; ch++) {
+					if(*ch == ' ' || *ch == '(' || *ch == ')') {
+						*ch = '_';
+					}
+				}
+
 				trackSampleType = trackDbSetting(track->tdb, "cellType");
 				trackLabName = trackDbSetting(track->tdb, "labName");
 				trackDataType = trackDbSetting(track->tdb, "dataType");
 				trackFeature = trackDbSetting(track->tdb, "trackFeature");
-				trackID = trackDbSetting(track->tdb, "trackID");
+
+				sprintf(trackID, "%s", trackDbSetting(track->tdb, "trackID"));
+				for(ch = trackID; ch < trackID + 255 && *ch; ch++) {
+					if(*ch == ' ' || *ch == '(' || *ch == ')') {
+						*ch = '_';
+					}
+				}
 
 				if (hTrackOnChrom(track->tdb, chromName))
 				{
