@@ -215,4 +215,4 @@ pip-log.txt
 .mr.developer.cfg
 
 #UCSC specific
-cleanHgCentral.pl.txt
+product/cleanHgCentral.pl.txt
