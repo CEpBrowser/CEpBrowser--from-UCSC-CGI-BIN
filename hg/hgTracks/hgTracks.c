@@ -96,7 +96,8 @@ char *protDbName;               /* Name of proteome database for this genome. */
 #define BRIGHT 3
 #define MAXCHAINS 50000000
 boolean hgDebug = FALSE;      /* Activate debugging code. Set to true by hgDebug=on in command line*/
-boolean hgControlOnly = FALSE;		/* XC: Activate control-only mode, do not draw any tracks, only show the controls */
+boolean CBhgControlOnly = FALSE;		/* XC: Activate control-only mode, do not draw any tracks, only show the controls */
+boolean CBhgSingleCell = FALSE;		/* XC: Activate single-cell mode, show navigation tools, but no track settings */
 int imagePixelHeight = 0;
 boolean dragZooming = TRUE;
 struct hash *oldVars = NULL;
@@ -682,7 +683,7 @@ struct tempName *ideoTn)
 	if (doIdeo && !psOutput)
 	{
 		hPrintf("<TR><TD HEIGHT=5></TD></TR>");
-		if(!CBIsInBrowser) {
+		if(!CBIsInBrowser || CBhgSingleCell) {
 			// Not in the Comparative Browser, so no need to change ID
 			hPrintf("<TR><TD><IMG SRC = \"%s\" BORDER=1 WIDTH=%d HEIGHT=%d USEMAP=#%s id='chrom'>",
 				ideoTn->forHtml, ideoWidth, ideoHeight, mapName);
@@ -2398,7 +2399,7 @@ void makeActiveImage(struct track *trackList, char *psOutput)
 			Hack guideline part to add the shades
 			*/
 			//hPrintf("<!-- Test information: shadeTrack: %d -->\n", shadeTrack==NULL);
-			if(CBIsInBrowser && shadeTrack != NULL) {
+			if(CBIsInBrowser && !CBhgSingleCell && shadeTrack != NULL) {
 				// won't draw the shade outside the comparative browser
 				double scale = scaleForWindow(insideWidth, winStart, winEnd);
 				struct slList *item;
@@ -4402,7 +4403,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 	/* Make the tracks display form with the zoom/scroll buttons and the active
 	* image.  If the ideoTn parameter is not NULL, it is filled in if the
 	* ideogram is created. 
-	* HACK: if hgControlOnly is on, then most functions other than the track controllers
+	* HACK: if CBhgControlOnly is on, then most functions other than the track controllers
 	*		will be disabled for speed. */
 {
 	struct group *group;
@@ -4426,10 +4427,10 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 #ifndef PRIVATE_CGI
 	// not private, doesn't do anything
 #else//def PRIVATE_CGI
-	// private, 
 	if(cgiVarExists("hgt.CompBrowser")) {
 		CBIsInBrowser = TRUE;
 	}
+	// private, 
 #endif//def PRIVATE_CGI
 
 	if (psOutput != NULL)
@@ -4441,7 +4442,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 		hgFindMatches = NULL;
 	}
 
-	if (!hgControlOnly) {
+	if (!CBhgControlOnly) {
 
 		/* Tell browser where to go when they click on image. */
 		hPrintf("<FORM ACTION=\"%s\" NAME=\"TrackHeaderForm\" id=\"TrackHeaderForm\" METHOD=\"GET\">\n\n", hgTracksName());
@@ -4508,7 +4509,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 	}
 	// ***** END HACK ****************
 
-	if (!hgControlOnly) {
+	if (!CBhgControlOnly) {
 
 		/* Before loading items, deal with the next/prev item arrow buttons if pressed. */
 		if (cgiVarExists("hgt.nextItem"))
@@ -4625,7 +4626,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 		{
 			/* set white-space to nowrap to prevent buttons from wrapping when screen is
 			* narrow */
-			if(CBIsInBrowser) {
+			if(CBIsInBrowser && !CBhgSingleCell) {
 				// is within CPBrowser, hide the navigating menus
 				// also, does not print all the hotlinks or title
 				hPrintf("<DIV STYLE=\"display:none;\">\n");
@@ -4690,7 +4691,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 			//hPrintf("<INPUT TYPE=HIDDEN id='positionHidden' NAME=\"position\" "
 			//	"VALUE=\"%s:%d-%d\">", chromName, winStart+1, winEnd);
 
-			if(CBIsInBrowser) {
+			if(CBIsInBrowser && !CBhgSingleCell) {
 				if (showTrackControls)
 				{
 					hPrintf("<INPUT TYPE=HIDDEN id='positionHidden' NAME=\"position\" "
@@ -4823,12 +4824,12 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 			// bail out b/c we are done
 				return;
 
-	} else { // is hgControlOnly
+	} else { // is CBhgControlOnly
 		hPrintf("<FORM ACTION=\"%s?hgControlOnly=on\" NAME=\"TrackForm\" id=\"TrackForm\" METHOD=\"POST\">\n\n", hgTracksName());
 		//hPrintf("<INPUT TYPE='hidden' id='hgControlOnly' name='hgControlOnly' value='on'>\n");
 	}
 
-	if (!CBIsInBrowser && !hideControls)
+	if ((!CBIsInBrowser || CBhgSingleCell) && !hideControls)
 	{
 		struct controlGrid *cg = NULL;
 
@@ -5362,7 +5363,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 
 	}
 
-	if (!hgControlOnly) {
+	if (!CBhgControlOnly) {
 		hPrintf("</CENTER>\n");
 	}
 
@@ -5394,12 +5395,12 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 		//}
 		//cartRemove(cart, "showEncode");
 		//// ***** END MORE HACK *****
-		if ((!psOutput) && hgControlOnly)
+		if ((!psOutput) && CBhgControlOnly)
 			cartSaveSession(cart);   /* Put up hgsid= as hidden variable. */
 		hPrintf("</FORM>\n");
 	}
 
-	if (!hgControlOnly) {
+	if (!CBhgControlOnly) {
 		/* hidden form for custom tracks CGI */
 		hPrintf("<FORM ACTION='%s' NAME='customTrackForm'>", hgCustomName());
 		cartSaveSession(cart);
@@ -5602,7 +5603,7 @@ void setLayoutGlobals()
 	withIdeogram = cartUsualBoolean(cart, "ideogram", TRUE);
 	withLeftLabels = cartUsualBoolean(cart, "leftLabels", TRUE);
 	// ***** HACK: if it is within the CPBrowser, then withCenterLabels is always FALSE *****
-	if(!CBIsInBrowser) {
+	if(!CBIsInBrowser || CBhgSingleCell) {
 		withCenterLabels = cartUsualBoolean(cart, "centerLabels", TRUE);
 	} else {
 		withCenterLabels = FALSE;
@@ -5970,7 +5971,7 @@ void resetVars()
 void doMiddle(struct cart *theCart)
 	/* Print the body of an html file.   */
 {
-	char *debugTmp = NULL, *controlOnly = NULL;
+	char *debugTmp = NULL;
 	/* Uncomment this to see parameters for debugging. */
 	/* struct dyString *state = NULL; */
 	/* Initialize layout and database. */
@@ -5999,20 +6000,22 @@ void doMiddle(struct cart *theCart)
 
 	setUdcCacheDir();
 
-	// HACK here: if hgControlOnly is specified, only display the current control part for CPBrowser 
+	// HACK here: if CBhgControlOnly is specified, only display the current control part for CPBrowser 
 	//				to use, nothing else is done;
+	//				Also, CBhgSingleCell is specified here.
 
 	initTl();
 
-	controlOnly = cartUsualString(cart, "hgControlOnly", "off");
-	if(sameString(controlOnly, "on")) {
-		hgControlOnly = TRUE;
+	CBhgControlOnly = cartUsualBoolean(cart, "hgControlOnly", FALSE);
+	if(CBhgControlOnly) {
 		cartSetString(cart, "org", organism);
 		cartSetString(cart, "db", database);
 		cartSetString(cart, "hgControlOnly", "off");		// this is to prevent normal browser being affected
 		doTrackForm(NULL, NULL);
 		return;
 	}
+
+	CBhgSingleCell = cartUsualBoolean(cart, "hgSingleCell", FALSE);
 
 	// END HACK
 
