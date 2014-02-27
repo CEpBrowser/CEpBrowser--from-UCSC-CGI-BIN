@@ -4632,7 +4632,9 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				hPrintf("<DIV STYLE=\"display:none;\">\n");
 			} else {
 				hPrintf("<DIV STYLE=\"white-space:nowrap;\">\n");
-				hotLinks();
+				if (!CBhgSingleCell) {
+					hotLinks();
+				}
 				/* Show title . */
 				freezeName = hFreezeFromDb(database);
 				if(freezeName == NULL)
@@ -5603,7 +5605,7 @@ void setLayoutGlobals()
 	withIdeogram = cartUsualBoolean(cart, "ideogram", TRUE);
 	withLeftLabels = cartUsualBoolean(cart, "leftLabels", TRUE);
 	// ***** HACK: if it is within the CPBrowser, then withCenterLabels is always FALSE *****
-	if(!CBIsInBrowser || CBhgSingleCell) {
+	if(!CBIsInBrowser) {
 		withCenterLabels = cartUsualBoolean(cart, "centerLabels", TRUE);
 	} else {
 		withCenterLabels = FALSE;
