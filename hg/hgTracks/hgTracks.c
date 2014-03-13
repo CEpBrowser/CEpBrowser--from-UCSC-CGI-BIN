@@ -4640,27 +4640,31 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				if(freezeName == NULL)
 					freezeName = "Unknown";
 				hPrintf("<FONT SIZE=5><B>");
-				if (startsWith("zoo",database) )
-				{
-					hPrintf("%s %s on %s June 2002 Assembly %s target1",
-						organization, browserName, organism, freezeName);
-				}
-				else
-				{
-					if (sameString(organism, "Archaea"))
+				if (!CBhgSingleCell) {
+					if (startsWith("zoo",database) )
 					{
-						hPrintf("%s %s on Archaeon %s Assembly",
-							organization, browserName, freezeName);
+						hPrintf("%s %s on %s June 2002 Assembly %s target1",
+							organization, browserName, organism, freezeName);
 					}
 					else
 					{
-						if (stringIn(database, freezeName))
-							hPrintf("%s %s on %s %s Assembly",
-							organization, browserName, organism, freezeName);
+						if (sameString(organism, "Archaea"))
+						{
+							hPrintf("%s %s on Archaeon %s Assembly",
+								organization, browserName, freezeName);
+						}
 						else
-							hPrintf("%s %s on %s %s Assembly (%s)",
-							organization, browserName, organism, freezeName, database);
+						{
+							if (stringIn(database, freezeName))
+								hPrintf("%s %s on %s %s Assembly",
+								organization, browserName, organism, freezeName);
+							else
+								hPrintf("%s %s on %s %s Assembly (%s)",
+								organization, browserName, organism, freezeName, database);
+						}
 					}
+				} else {
+					hPrintf("&nbsp;");
 				}
 				hPrintf("</B></FONT><BR>\n");
 				/* This is a clear submit button that browsers will use by default when enter is pressed in position box. */
