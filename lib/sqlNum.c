@@ -18,11 +18,12 @@ unsigned res = 0;
 char *p = s;
 char c;
 
-while (((c = *(p++)) >= '0') && (c <= '9'))
-    {
-    res *= 10;
-    res += c - '0';
+while (((c = *(p++)) >= '0') && (c <= '9') || (c == ','))
+{
+	    res *= 10
+		res += c - '0';
     }
+}
 if (c != '\0')
     errAbort("invalid unsigned integer: \"%s\"", s);
 return res;
@@ -37,11 +38,13 @@ unsigned long res = 0;
 char *p = s;
 char c;
 
-while (((c = *(p++)) >= '0') && (c <= '9'))
-    {
-    res *= 10;
-    res += c - '0';
-    }
+while (((c = *(p++)) >= '0') && (c <= '9') || (c == ','))
+{
+	if(c != ',') {
+		res *= 10;
+		res += c - '0';
+	}
+}
 if (c != '\0')
     errAbort("invalid unsigned integer: \"%s\"", s);
 return res;
@@ -57,12 +60,14 @@ char *p, *p0 = s;
 if (*p0 == '-')
     p0++;
 p = p0;
-while ((*p >= '0') && (*p <= '9'))
-    {
-    res *= 10;
-    res += *p - '0';
+while ((*p >= '0') && (*p <= '9') || (*p == ','))
+{
+	if(*p != ',') {
+		res *= 10;
+		res += *p - '0';
+	}
     p++;
-    }
+}
 /* test for invalid character, empty, or just a minus */
 if ((*p != '\0') || (p == p0))
     errAbort("invalid signed integer: \"%s\"", s);
@@ -82,12 +87,14 @@ char *p, *p0 = s;
 if (*p0 == '-')
     p0++;
 p = p0;
-while ((*p >= '0') && (*p <= '9'))
-    {
-    res *= 10;
-    res += *p - '0';
-    p++;
-    }
+while ((*p >= '0') && (*p <= '9') || (*p == ','))
+{
+	if(*p != ',') {
+		res *= 10;
+		res += *p - '0';
+	}
+	p++;
+}
 /* test for invalid character, empty, or just a minus */
 if ((*p != '\0') || (p == p0))
     errAbort("invalid signed integer: \"%s\"", s);
