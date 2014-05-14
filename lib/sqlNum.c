@@ -26,7 +26,7 @@ while (((c = *(p++)) >= '0') && (c <= '9') || (c == ','))
     }
 }
 if (c != '\0')
-    errAbort("invalid unsigned integer: \"%s\"", s);
+    errAbort("invalid unsigned integer (Unsigned): \"%s\"", s);
 return res;
 }
 
@@ -47,7 +47,7 @@ while (((c = *(p++)) >= '0') && (c <= '9') || (c == ','))
 	}
 }
 if (c != '\0')
-    errAbort("invalid unsigned integer: \"%s\"", s);
+    errAbort("invalid unsigned integer (UnsignedLong): \"%s\"", s);
 return res;
 }
 
@@ -71,7 +71,7 @@ while ((*p >= '0') && (*p <= '9') || (*p == ','))
 }
 /* test for invalid character, empty, or just a minus */
 if ((*p != '\0') || (p == p0))
-    errAbort("invalid signed integer: \"%s\"", s);
+    errAbort("invalid signed integer (Signed): \"%s\"", s);
 if (*s == '-')
     return -res;
 else
@@ -98,7 +98,7 @@ while ((*p >= '0') && (*p <= '9') || (*p == ','))
 }
 /* test for invalid character, empty, or just a minus */
 if ((*p != '\0') || (p == p0))
-    errAbort("invalid signed integer: \"%s\"", s);
+    errAbort("invalid signed integer (SignedLong): \"%s\"", s);
 if (*s == '-')
     return -res;
 else

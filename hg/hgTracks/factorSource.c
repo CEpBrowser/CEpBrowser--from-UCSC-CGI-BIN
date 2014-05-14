@@ -17,10 +17,22 @@ static struct bed *loadOne(char **row)
 return bedLoadN(row, 15);
 }
 
+static struct bed *loadOneV3(char **row)
+/* Load up factorSource from array of strings. */
+{
+return bedLoadNV3(row);
+}
+
 static void loadAll(struct track *track)
 /* Go load all items in window. */
 {
 bedLoadItem(track, track->table, (ItemLoader)loadOne);
+}
+
+static void loadAllV3(struct track *track)
+/* Go load all items in window. */
+{
+bedLoadItem(track, track->table, (ItemLoader)loadOneV3);
 }
 
 static int rightPixels(struct track *track, void *item)
@@ -127,11 +139,17 @@ void factorSourceMethods(struct track *track)
 /* Set up special methods for factorSource type tracks. */
 {
 /* Start out as a bed, and then specialize loader, mark self as packable. */
-track->bedSize = 15;
 bedMethods(track);
 track->drawItemAt = factorSourceDrawItemAt;
 track->drawItems = factorSourceDraw;
-track->loadItems = loadAll;
+if(endsWith(track->track, "V3")) {
+	// new version
+	track->bedSize = 8;
+	track->loadItems = loadAllV3;
+} else {
+	track->bedSize = 15;
+	track->loadItems = loadAll;
+}
 track->itemRightPixels = rightPixels;
 
 /* Get the associated data describing the various sources. */

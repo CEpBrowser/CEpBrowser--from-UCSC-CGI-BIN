@@ -4546,8 +4546,9 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 		for (track = trackList; track != NULL; track = track->next)
 		{
 			/* adjust track visibility based on supertrack just before load loop */
-			if (tdbIsSuperTrackChild(track->tdb))
+			if (tdbIsSuperTrackChild(track->tdb)) {
 				limitSuperTrackVis(track);
+			}
 
 			/* remove cart priority variables if they are set
 			to the default values in the trackDb */

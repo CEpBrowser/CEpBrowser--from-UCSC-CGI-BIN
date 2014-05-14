@@ -360,6 +360,25 @@ assert(sizeOne == ret->blockCount);
 return ret;
 }
 
+struct bed *bedLoadNV3(char *row[])
+/* Convert a row of strings to a bed. */
+{
+struct bed * bed;
+int count;
+
+AllocVar(bed);
+bed->chrom = cloneString(row[0]);
+bed->chromStart = sqlUnsigned(row[1]);
+bed->chromEnd = sqlUnsigned(row[2]);
+bed->name = cloneString(row[3]);
+bed->score = sqlSigned(row[4]);
+bed->expCount = sqlUnsigned(row[5]);
+sqlSignedDynamicArray(row[6], &bed->expIds, &count);
+sqlFloatDynamicArray(row[7], &bed->expScores, &count);
+
+return bed;
+}
+
 struct bed *bedLoadN(char *row[], int wordCount)
 /* Convert a row of strings to a bed. */
 {
