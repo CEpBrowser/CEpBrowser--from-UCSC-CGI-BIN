@@ -1152,7 +1152,7 @@ struct mdbObj *mdbObjQueryByObj(struct sqlConnection *conn,char *table,char *obj
 if(obj == NULL)
     return mdbObjQuery(conn,table,NULL);
 
-struct mdbObj *queryObj  = mdbObjCreate(obj,var,NULL,NULL);
+struct mdbObj *queryObj  = mdbObjCreate(obj,var,NULL);
 struct mdbObj *resultObj = mdbObjQuery(conn,table,queryObj);
 mdbObjsFree(&queryObj);
 return resultObj;
@@ -1240,7 +1240,7 @@ struct mdbByVar *mdbByVarQueryByVar(struct sqlConnection *conn,char *table,char 
 if(varName == NULL)
     return mdbByVarsQuery(conn,table,NULL);
 
-struct mdbByVar *queryVar  = mdbByVarCreate(varName,NULL,val);
+struct mdbByVar *queryVar  = mdbByVarCreate(varName,val);
 struct mdbByVar *resultVar = mdbByVarsQuery(conn,table,queryVar);
 mdbByVarsFree(&queryVar);
 return resultVar;
