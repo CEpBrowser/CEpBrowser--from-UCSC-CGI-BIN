@@ -15,7 +15,7 @@ struct metaTbl
     char *objName;          // Object name or ID.
     char *objType;          // table | file
     char *var;              // Metadata variable name.
-    char *varType;          // txt | binary
+    //char *varType;          // txt | binary
     char *val;              // Metadata value.
     };
 
@@ -124,7 +124,7 @@ struct metaVar
     {
     struct metaVar* next;     // Next in singly linked list of variables
     char *var;                // Metadata variable name.
-    enum metaVarType varType; // txt | binary
+    //enum metaVarType varType; // txt | binary
     char *val;                // Metadata value.
     };
 
@@ -162,7 +162,7 @@ struct metaByVar
     {
     struct metaByVar* next;   // Next in singly linked list of variables
     char *var;                // Metadata variable name.
-    enum metaVarType varType; // txt | binary
+    //enum metaVarType varType; // txt | binary
     boolean notEqual;         // For querying only
     struct metaLimbVal* vals; // list of values associated with this var
     struct hash* valHash;     // if NOT NULL: hash of vals  (val str to limbVal struct)
@@ -175,10 +175,10 @@ enum metaObjType metaObjTypeStringToEnum(char *objType);
 char *metaObjTypeEnumToString(enum metaObjType objType);
 // Convert metadata objType enum string
 
-enum metaVarType metaVarTypeStringToEnum(char *varType);
+//enum metaVarType metaVarTypeStringToEnum(char *varType);
 // Convert metadata varType string to enum
 
-char *metaVarTypeEnumToString(enum metaVarType varType);
+//char *metaVarTypeEnumToString(enum metaVarType varType);
 // Convert metadata varType enum string
 
 // ------ Parsing lines ------
@@ -190,10 +190,10 @@ struct metaByVar *metaByVarsLineParse(char *line);
 
 
 // ------ Loading from args, hashes ------
-struct metaObj *metaObjCreate(char *obj,char *type,char *var, char *varType,char *val);
+struct metaObj *metaObjCreate(char *obj,char *type,char *var, char *val);
 /* Creates a singular metaObj query object based on obj and all other optional params. */
 
-struct metaByVar *metaByVarCreate(char *var, char *varType,char *val);
+struct metaByVar *metaByVarCreate(char *var, char *val);
 /* Creates a singular var=val pair struct for metadata queries. */
 
 struct metaObj *metaObjsLoadFromHashes(struct hash *objsHash);
@@ -279,7 +279,7 @@ void metaObjRemoveVars(struct metaObj *metaObjs, char *vars);
 void metaObjSwapVars(struct metaObj *metaObjs, char *vars,boolean deleteThis);
 // Replaces objs' vars with var=vap pairs provided, preparing for DB update.
 
-void metaObjTransformToUpdate(struct metaObj *metaObjs, char *var, char *varType,char *val,boolean deleteThis);
+void metaObjTransformToUpdate(struct metaObj *metaObjs, char *var, char *val,boolean deleteThis);
 // Turns one or more metaObjs into the stucture needed to add/update or delete.
 
 struct metaObj *metaObjClone(const struct metaObj *metaObj);

@@ -55,7 +55,7 @@ struct mdbVar * mdbVar;
 
 AllocVar(mdbVar);
 mdbVar->var     = cloneString(var);
-mdbVar->varType = vtTxt;
+//mdbVar->varType = vtTxt;
 mdbVar->val     = cloneString(val);
 hashAdd(mdbObj->varHash, mdbVar->var, mdbVar); // pointer to struct to resolve type
 slAddHead(&(mdbObj->vars),mdbVar);

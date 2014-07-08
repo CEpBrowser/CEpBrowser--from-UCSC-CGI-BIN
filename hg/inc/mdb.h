@@ -14,7 +14,7 @@ struct mdb
     struct mdb *next;  /* Next in singly linked list. */
     char *obj;	/* Object name or ID. */
     char *var;	/* Metadata variable name. */
-    char *varType;	/* txt | binary */
+    //char *varType;	/* txt | binary */
     char *val;	/* Metadata value. */
     };
 
@@ -118,7 +118,7 @@ struct mdbVar
     {
     struct mdbVar* next;     // Next in singly linked list of variables
     char *var;               // Metadata variable name.
-    enum mdbVarType varType; // txt | binary
+    //enum mdbVarType varType; // txt | binary
     char *val;               // Metadata value.
     };
 
@@ -154,17 +154,17 @@ struct mdbByVar
     {
     struct mdbByVar* next;   // Next in singly linked list of variables
     char *var;               // Metadata variable name.
-    enum mdbVarType varType; // txt | binary
+    //enum mdbVarType varType; // txt | binary
     boolean notEqual;        // For querying only
     struct mdbLimbVal* vals; // list of values associated with this var
     struct hash* valHash;    // if NOT NULL: hash of vals  (val str to limbVal struct)
     };
 
 // -------------- Enum to Strings --------------
-enum mdbVarType mdbVarTypeStringToEnum(char *varType);
+//enum mdbVarType mdbVarTypeStringToEnum(char *varType);
 // Convert metadata varType string to enum
 
-char *mdbVarTypeEnumToString(enum mdbVarType varType);
+//char *mdbVarTypeEnumToString(enum mdbVarType varType);
 // Convert metadata varType enum string
 
 // ------ Parsing lines ------
@@ -176,10 +176,10 @@ struct mdbByVar *mdbByVarsLineParse(char *line);
 
 
 // ------ Loading from args, hashes ------
-struct mdbObj *mdbObjCreate(char *obj,char *var, char *varType,char *val);
+struct mdbObj *mdbObjCreate(char *obj,char *var, char *val);
 /* Creates a singular mdbObj query object based on obj and all other optional params. */
 
-struct mdbByVar *mdbByVarCreate(char *var, char *varType,char *val);
+struct mdbByVar *mdbByVarCreate(char *var, char *val);
 /* Creates a singular var=val pair struct for metadata queries. */
 
 struct mdbObj *mdbObjsLoadFromHashes(struct hash *objsHash);
@@ -277,7 +277,7 @@ void mdbObjRemoveVars(struct mdbObj *mdbObjs, char *vars);
 void mdbObjSwapVars(struct mdbObj *mdbObjs, char *vars,boolean deleteThis);
 // Replaces objs' vars with var=vap pairs provided, preparing for DB update.
 
-void mdbObjTransformToUpdate(struct mdbObj *mdbObjs, char *var, char *varType,char *val,boolean deleteThis);
+void mdbObjTransformToUpdate(struct mdbObj *mdbObjs, char *var, char *val,boolean deleteThis);
 // Turns one or more mdbObjs into the stucture needed to add/update or delete.
 
 struct mdbObj *mdbObjClone(const struct mdbObj *mdbObj);
