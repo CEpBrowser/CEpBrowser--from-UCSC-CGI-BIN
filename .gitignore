@@ -216,3 +216,5 @@ pip-log.txt
 
 #UCSC specific
 product/cleanHgCentral.pl.txt
+*.sdf
+*.suo
