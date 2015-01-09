@@ -5367,6 +5367,61 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 		}
 		hPrintf("</DIV>\n");
 
+		hPrintf("<DIV STYLE=\"display:none;\" id=\"TrackControlsEncodePeaks\">\n");
+
+		for (group = groupList; group != NULL; group = group->next)
+		{
+			if (group->trackList == NULL)
+				continue;
+			if (differentString(group->name, "encodePeaks")) {
+				// Only encode specific tracks needs to be done here
+				continue;
+			}
+
+			struct trackRef *tr;
+
+			/* Display track controls for peak */
+			for (tr = group->trackList; tr != NULL; tr = tr->next)
+			{
+				// HACK: This is the second time
+				struct track *track = tr->track;
+				char *trackSeriesName;
+
+				// TODO: META INFO
+				//			currently the only meta info needed for common tracks is sample type
+				//			may add other meta info here if needed
+				char *trackSampleType, *trackLabName, *trackDataType, *trackFeature;
+				boolean show = FALSE;
+
+				sprintf(trackID, "%s", track->track);
+				for(ch = trackID; ch < trackID + 255 && *ch; ch++) {
+					if(*ch == ' ' || *ch == '(' || *ch == ')') {
+						*ch = '_';
+					}
+				}
+				/* this should be the tablename + '_peak' */
+
+				if (hTrackOnChrom(track->tdb, chromName))
+				{
+					if (tdbIsSuper(track->tdb)) {
+						/* determine if supertrack is show/hide */
+						char *setting =
+							cartUsualString(cart, track->tdb->track, track->tdb->isShow ? "show" : "hide");
+						if (sameString("show", setting) || sameString("dense", setting))
+							show = TRUE;
+
+					} else {
+						/* check for option of limiting visibility to one mode */
+						show = !(track->visibility == tvHide);
+					}
+				}
+				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", trackID, track->track,
+					show? "dense": "hide");
+			}
+
+		}
+		hPrintf("</DIV>\n");
+
 
 	}
 
