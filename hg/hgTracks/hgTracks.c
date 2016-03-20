@@ -5238,6 +5238,7 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				//			currently the only meta info needed for common tracks is sample type
 				//			may add other meta info here if needed
 				char *trackSampleType, *trackDataType, *trackFeature;
+				char *trackIndSampleType, *trackIndLabName, *trackIndDataType, *trackIndFeature;
 				boolean show = FALSE;
 				if (tdbIsSuperTrackChild(track->tdb))
 					/* don't display supertrack members */
@@ -5276,6 +5277,12 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 				}
 				hPrintf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\">\n", trackID, track->track,
 					show? "dense": "hide");
+
+				trackIndSampleType = trackDbSetting(track->tdb, "cellType");
+				trackIndLabName = trackDbSetting(track->tdb, "labName");
+				trackIndDataType = trackDbSetting(track->tdb, "dataType");
+				trackIndFeature = trackDbSetting(track->tdb, "trackFeature");
+
 				if(trackFeature != NULL) {
 					hPrintf("<span id=\"%s_title\">%s (%s)</span>\n", trackID, trackDataType, trackFeature);
 					hPrintf("<span id=\"%s_data\">%s</span>\n", trackID, trackSampleType);
@@ -5287,6 +5294,11 @@ void doTrackForm(char *psOutput, struct tempName *ideoTn)
 						hPrintf("<span id=\"%s_title\">%s</span>\n", trackID, trackDataType);
 						hPrintf("<span id=\"%s_data\"><em>N/A</em></span>\n", trackID);
 					}
+				}
+				if(trackIndSampleType != NULL) {
+					hPrintf("<span id=\"%s_inddata\">%s\t%s</span>\n", trackID, trackIndSampleType, trackIndLabName);
+				} else {
+					hPrintf("<span id=\"%s_inddata\"><em>N/A</em>\t%s</span>\n", trackID, trackIndLabName);
 				}
 			}
 
