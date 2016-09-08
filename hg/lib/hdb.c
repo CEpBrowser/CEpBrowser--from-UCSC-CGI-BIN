@@ -255,11 +255,13 @@ boolean hArchiveDbExists(char *database)
 {
 struct sqlConnection *conn = hConnectCentral();
 char buf[128];
-char query[256];
+char query[256], *safeDatabase;
 boolean res = FALSE;
+safeDatabase = sqlEscapeString(database);
 safef(query, sizeof(query), "select name from dbDbArch where name = '%s'",
-      database);
+      safeDatabase);
 res = (sqlQuickQuery(conn, query, buf, sizeof(buf)) != NULL);
+free(safeDatabase);
 hDisconnectCentral(&conn);
 return res;
 }
@@ -337,7 +339,7 @@ struct sqlConnection *conn = hConnectCentral();
 struct sqlResult *sr = NULL;
 char **row;
 struct defaultDb *db = NULL;
-char query [256];
+char query [256], *safeGenome;
 char *result = NULL;
 
 if (NULL == genome)
@@ -346,9 +348,12 @@ if (NULL == genome)
     }
 
 /* Get proper default from defaultDb table */
+/* escape genome string */
+safeGenome = sqlEscapeString(genome);
 safef(query, sizeof(query), "select * from defaultDb where genome = '%s'",
-      genome);
+      safeGenome);
 sr = sqlGetResult(conn, query);
+free(safeGenome);
 if ((row = sqlNextRow(sr)) != NULL)
     {
     db = defaultDbLoad(row);
@@ -381,8 +386,9 @@ char *hDefaultGenomeForClade(char *clade)
 /* Return highest relative priority genome for clade. */
 {
 struct sqlConnection *conn = hConnectCentral();
-char query[512];
+char query[512], *safeClade;
 char *genome = NULL;
+safeClade = sqlEscapeString(clade);
 /* Get the top-priority genome *with an active database* so if genomeClade
  * gets pushed from hgwdev to hgwbeta/RR with genomes whose dbs haven't been
  * pushed yet, they'll be ignored. */
@@ -391,8 +397,9 @@ safef(query, sizeof(query),
       "where genomeClade.clade = '%s' and genomeClade.genome = dbDb.genome "
       "and dbDb.active = 1 "
       "order by genomeClade.priority limit 1",
-      clade);
+      safeClade);
 genome = sqlQuickString(conn, query);
+free(safeClade);
 hDisconnectCentral(&conn);
 return genome;
 }
