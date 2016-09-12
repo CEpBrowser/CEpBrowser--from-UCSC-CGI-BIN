@@ -23,6 +23,9 @@ void htmlParagraph(char *line, ...);
 void htmlVaParagraph(char *line, va_list args);
 /* Print a line in it's own paragraph. */
 
+void htmlVaEscapeParagraph(char *line, va_list args);
+/* Print a line in it's own paragraph. */
+
 void htmlCenterParagraph(char *line, ...);
 /* Center a line in it's own paragraph. */
 

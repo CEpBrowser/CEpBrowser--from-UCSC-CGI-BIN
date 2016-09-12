@@ -41,6 +41,18 @@ vfprintf(stdout, line, args);
 fputs("</P>\n", stdout);
 }
 
+void htmlVaEscapeParagraph(char *line, va_list args)
+/* Print a line in it's own paragraph. */
+{
+fputs("<P>", stdout);
+char message[1024];
+vsnprintf(message,sizeof(message), line, args);
+char *encodedMessage = htmlEncodeText(message,FALSE); // NOTE: While some internal HTML should work, a single quote (') will will screw it all up!
+fputs(encodedMessage, stdout); 
+freeMem(encodedMessage);
+fputs("</P>\n", stdout);
+}
+
 void htmlParagraph(char *line, ...)
 {
 va_list args;
@@ -263,7 +275,7 @@ if (!initted)
     initted = TRUE;
     }
 printf("%s", htmlWarnStartPattern());
-htmlVaParagraph(format,args);
+htmlVaEscapeParagraph(format,args);
 printf("%s", htmlWarnEndPattern());
 }
 

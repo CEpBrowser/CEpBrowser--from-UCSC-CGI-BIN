@@ -261,7 +261,7 @@ safeDatabase = sqlEscapeString(database);
 safef(query, sizeof(query), "select name from dbDbArch where name = '%s'",
       safeDatabase);
 res = (sqlQuickQuery(conn, query, buf, sizeof(buf)) != NULL);
-free(safeDatabase);
+freeMem(safeDatabase);
 hDisconnectCentral(&conn);
 return res;
 }
@@ -353,7 +353,7 @@ safeGenome = sqlEscapeString(genome);
 safef(query, sizeof(query), "select * from defaultDb where genome = '%s'",
       safeGenome);
 sr = sqlGetResult(conn, query);
-free(safeGenome);
+freeMem(safeGenome);
 if ((row = sqlNextRow(sr)) != NULL)
     {
     db = defaultDbLoad(row);
@@ -399,7 +399,7 @@ safef(query, sizeof(query),
       "order by genomeClade.priority limit 1",
       safeClade);
 genome = sqlQuickString(conn, query);
-free(safeClade);
+freeMem(safeClade);
 hDisconnectCentral(&conn);
 return genome;
 }
@@ -408,15 +408,17 @@ char *hDbForSciName(char *sciName)
 /* Get default db for scientific name */
 {
 char *db = NULL;
-char query[256];
+char query[256], *safeName;
 struct sqlConnection *centralConn = hConnectCentral();
 
+safeName = sqlEscapeString(sciName);
 safef(query, sizeof(query),
     "select defaultDb.name from dbDb,defaultDb "
     "where dbDb.scientificName='%s' "
     "and dbDb.name = defaultDb.name ", sciName);
 db = sqlQuickString(centralConn, query);
 hDisconnectCentral(&centralConn);
+freeMem(safeName);
 
 return db;
 }
@@ -1023,13 +1025,14 @@ boolean hChromBandConn(struct sqlConnection *conn,
 {
 char query[256];
 char buf[HDB_MAX_BAND_STRING];
-char *s;
+char *s, *safeChrom;
 boolean ok = TRUE;
 boolean isDmel = startsWith("dm", sqlGetDatabase(conn));
 
+safeChrom = sqlEscapeString(chrom);
 safef(query, sizeof(query),
 	"select name from cytoBand where chrom = '%s' and chromStart <= %d and chromEnd > %d",
-	chrom, pos, pos);
+	safeChrom, pos, pos);
 buf[0] = 0;
 s = sqlQuickQuery(conn, query, buf, sizeof(buf));
 if (s == NULL)
@@ -1039,6 +1042,7 @@ if (s == NULL)
    }
 safef(retBand, HDB_MAX_BAND_STRING, "%s%s",
       (isDmel ? "" : skipChr(chrom)), buf);
+freeMem(safeChrom);
 return ok;
 }
 
@@ -1065,8 +1069,11 @@ boolean hScaffoldPos(char *db, char *chrom, int start, int end,
  * Return FALSE if unable to convert */
 {
 int ret = FALSE;
-char table[HDB_MAX_TABLE_STRING];
+char table[HDB_MAX_TABLE_STRING], safeChrom;
+
+safeChrom = sqlEscapeString(chrom);
 safef(table, sizeof(table), "%s_gold", chrom);
+freeMem(safeChrom);
 if (!hTableExists(db, table))
     return FALSE;
 else
@@ -1166,10 +1173,11 @@ char query[256];
 struct sqlResult *sr;
 char **row;
 long long dbSize, diskSize;
-char *path;
+char *path, *safeExtFileTable;
 
+safeExtFileTable = sqlEscapeString(extFileTable);
 safef(query, sizeof(query),
-	"select path,size from %s where id = %u", extFileTable, extFileId);
+	"select path,size from %s where id = %u", safeExtFileTable, extFileId);
 sr = sqlGetResult(conn, query);
 if ((row = sqlNextRow(sr)) == NULL)
     {
@@ -1296,13 +1304,14 @@ static bioSeq *seqGet(char *db, char *acc, boolean isDna, char *seqTbl, char *ex
  * found. */
 {
 /* look up sequence */
-char dbBuf[64];
+char dbBuf[64], *safeSeqTbl;
 char *seqDb = dbTblParse(db, seqTbl, &seqTbl, dbBuf, sizeof(dbBuf));
 struct sqlConnection *conn = hAllocConn(seqDb);
 char query[256];
+safeSeqTbl = sqlEscapeString(seqTbl);
 safef(query, sizeof(query),
       "select extFile,file_offset,file_size from %s where acc = '%s'",
-      seqTbl, acc);
+      safeSeqTbl, acc);
 struct sqlResult *sr = sqlMustGetResult(conn, query);
 char **row = sqlNextRow(sr);
 if (row == NULL)
@@ -1316,6 +1325,7 @@ off_t offset = sqlLongLong(row[1]);
 size_t size = sqlUnsigned(row[2]);
 sqlFreeResult(&sr);
 hFreeConn(&conn);
+freeMem(safeSeqTbl);
 
 /* look up extFile */
 char *extDb = dbTblParse(db, extFileTbl, &extFileTbl, dbBuf, sizeof(dbBuf));
@@ -1381,7 +1391,9 @@ static boolean querySeqInfo(struct sqlConnection *conn, char *acc, char *seqTbl,
 boolean gotIt = FALSE;
 if (hTableExists(sqlGetDatabase(conn), seqTbl))
     {
-    char query[256];
+    char query[256], safeExtFileFld, safeAcc;
+    safeExtFileFld = sqlEscapeString(extFileFld);
+    safeAcc = sqlEscapeString(acc);
     safef(query, sizeof(query),
        "select id, %s, file_offset, file_size from %s where acc = '%s'",
           extFileFld, seqTbl, acc);
@@ -1400,6 +1412,8 @@ if (hTableExists(sqlGetDatabase(conn), seqTbl))
         gotIt = TRUE;
         }
     sqlFreeResult(&sr);
+    freeMem(safeExtFileFld);
+    freeMem(safeAcc);
     }
 return gotIt;
 }
@@ -1501,14 +1515,20 @@ static boolean checkIfInTable(struct sqlConnection *conn, char *acc,
 /* check if a a sequences exists in a table */
 {
 boolean inTable = FALSE;
-char query[256];
+char query[256], safeTable, safeColumn, safeAcc;
 struct sqlResult *sr;
 char **row;
+safeTable = sqlEscapeString(table);
+safeColumn = sqlEscapeString(column);
+safeAcc = sqlEscapeString(acc);
 safef(query, sizeof(query), "select 0 from %s where %s = \"%s\"",
       table, column, acc);
 sr = sqlGetResult(conn, query);
 inTable = ((row = sqlNextRow(sr)) != NULL);
 sqlFreeResult(&sr);
+freeMem(safeTable);
+freeMem(safeColumn);
+freeMem(safeAcc);
 return inTable;
 }
 
@@ -1548,8 +1568,10 @@ static struct dnaSeq *loadSeqFromTable(struct sqlConnection *conn,
 struct dnaSeq *seq = NULL;
 struct sqlResult *sr;
 char **row;
-char query[256];
+char query[256], safeTable, safeAcc;
 
+safeTable = sqlEscapeString(table);
+safeAcc = sqlEscapeString(acc);
 safef(query, sizeof(query), "select name,seq from %s where name = '%s'",
       table, acc);
 sr = sqlGetResult(conn, query);
@@ -1557,6 +1579,8 @@ if ((row = sqlNextRow(sr)) != NULL)
     seq = newDnaSeq(cloneString(row[1]), strlen(row[1]), row[0]);
 
 sqlFreeResult(&sr);
+freeMem(safeTable);
+freeMem(safeAcc);
 return seq;
 }
 

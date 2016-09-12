@@ -1378,7 +1378,7 @@ if (!initted)
     initted = TRUE;
     }
 printf("%s", htmlWarnStartPattern());
-htmlVaParagraph(format,args);
+htmlVaEscapeParagraph(format,args);
 printf("%s", htmlWarnEndPattern());
 
 /* write warning/error message to stderr so they get logged. */
