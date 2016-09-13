@@ -1069,7 +1069,7 @@ boolean hScaffoldPos(char *db, char *chrom, int start, int end,
  * Return FALSE if unable to convert */
 {
 int ret = FALSE;
-char table[HDB_MAX_TABLE_STRING], safeChrom;
+char table[HDB_MAX_TABLE_STRING], *safeChrom;
 
 safeChrom = sqlEscapeString(chrom);
 safef(table, sizeof(table), "%s_gold", chrom);
@@ -1391,7 +1391,7 @@ static boolean querySeqInfo(struct sqlConnection *conn, char *acc, char *seqTbl,
 boolean gotIt = FALSE;
 if (hTableExists(sqlGetDatabase(conn), seqTbl))
     {
-    char query[256], safeExtFileFld, safeAcc;
+    char query[256], *safeExtFileFld, *safeAcc;
     safeExtFileFld = sqlEscapeString(extFileFld);
     safeAcc = sqlEscapeString(acc);
     safef(query, sizeof(query),
@@ -1515,7 +1515,7 @@ static boolean checkIfInTable(struct sqlConnection *conn, char *acc,
 /* check if a a sequences exists in a table */
 {
 boolean inTable = FALSE;
-char query[256], safeTable, safeColumn, safeAcc;
+char query[256], *safeTable, *safeColumn, *safeAcc;
 struct sqlResult *sr;
 char **row;
 safeTable = sqlEscapeString(table);
@@ -1568,7 +1568,7 @@ static struct dnaSeq *loadSeqFromTable(struct sqlConnection *conn,
 struct dnaSeq *seq = NULL;
 struct sqlResult *sr;
 char **row;
-char query[256], safeTable, safeAcc;
+char query[256], *safeTable, *safeAcc;
 
 safeTable = sqlEscapeString(table);
 safeAcc = sqlEscapeString(acc);
